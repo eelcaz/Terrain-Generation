@@ -23,13 +23,12 @@ private:
         157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,
         93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
     };
-
 public:
     int gridWidth = 64;
-    float interpolate(float a, float b, float weight);
-    float dotProduct(float x, float y);
-    float noise(float x, float y);
-    void generateRandomGrid();
+    static float interpolate(float a, float b, float weight);
+    static float dotProduct(int gridX, int gridY, float x, float y);
+    static Vector2 randomGradient(int x, int y);
+    static float noise(float x, float y);
 };
 
 float PerlinNoise::interpolate(float a, float b, float weight) {
