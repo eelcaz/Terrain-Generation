@@ -47,6 +47,16 @@ Vector2 PerlinNoise::randomGradient(int x, int y) {
     return v;
 };
 
+float PerlinNoise::dotProduct(int xGrid, int yGrid, float px, float py) {
+    Vector2 gradient = randomGradient(xGrid, yGrid);
+    // get the offset vector from the grid point to the target point
+    Vector2 offsetVector = {
+        px - (float)xGrid,      // x
+        py - (float)yGrid       // y
+    };
+    return gradient.x*offsetVector.x + gradient.y*offsetVector.y;
+};
+
 int main(int argc, char *argv[]) {
     return 0;
 }
