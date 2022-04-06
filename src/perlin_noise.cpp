@@ -1,3 +1,7 @@
+#include <math.h>
+#include <iostream>
+#include <iomanip>
+
 struct Vector2 {
     float x;
     float y;
