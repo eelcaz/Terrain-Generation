@@ -85,5 +85,21 @@ float PerlinNoise::noise(float x, float y) {
 }
 
 int main(int argc, char *argv[]) {
-    return 0;
+    float n1, n2, n3;
+    n1 = PerlinNoise::noise(1.3, 1.6);
+    n2 = PerlinNoise::noise(85.24, 46.22);
+    n3 = PerlinNoise::noise(0.11, 39.9);
+    std::cout << "noise values:" << "\n";
+    std::cout << n1 << "\n";
+    std::cout << n2 << "\n";
+    std::cout << n3 << "\n";
+
+    for (float i = 5; i < 8; i += 0.2) {
+        for (float j = 5; j < 8; j += 0.2) {
+            float val = PerlinNoise::noise(i, j);
+            std::cout << std::left << std::setw(12) << val << " ";
+        }
+        std::cout << "\n";
+    }
+
 }
