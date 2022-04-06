@@ -63,6 +63,28 @@ float PerlinNoise::dotProduct(int xGrid, int yGrid, float px, float py) {
     return gradient.x*offsetVector.x + gradient.y*offsetVector.y;
 };
 
+float PerlinNoise::noise(float x, float y) {
+    int xGrid0 = (int)floor(x);
+    int yGrid0 = (int)floor(y);
+    int xGrid1 = xGrid0 + 1;
+    int yGrid1 = yGrid0 + 1;
+
+    // calculate weights
+    float wx = x - (float)xGrid0;
+    float wy = y - (float)yGrid0;
+
+    float dot1, dot2, interp1, interp2;
+    dot1 = dotProduct(xGrid0, yGrid0, x, y);
+    dot2 = dotProduct(xGrid1, yGrid0, x, y);
+    interp1 = interpolate(dot1, dot2, wx);
+
+    dot1 = dotProduct(xGrid0, yGrid1, x, y);
+    dot2 = dotProduct(xGrid1, yGrid1, x, y);
+    interp2 = interpolate(dot1, dot2, wx);
+
+    return interpolate(interp1, interp2, wy);
+}
+
 int main(int argc, char *argv[]) {
     return 0;
 }
