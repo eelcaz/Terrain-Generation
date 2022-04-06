@@ -1,3 +1,8 @@
+struct Vector2 {
+    float x;
+    float y;
+};
+
 class PerlinNoise {
 private:
     static constexpr int PERMUTATION[] = {
