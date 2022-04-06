@@ -30,7 +30,19 @@ float PerlinNoise::interpolate(float a, float b, float weight) {
     // the simplest method of interpolation
     // might need a more complex method if in need of better results
     return a*(1-weight) + (b*weight);
-};
+}
+float PerlinNoise::dotProduct(float x, float y)
+{
+    return 0.0f;
+}
+float PerlinNoise::noise(float x, float y)
+{
+    return 0.0f;
+}
+void PerlinNoise::generateRandomGrid()
+{
+}
+;
 
 int main(int argc, char *argv[]) {
     return 0;

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+// TODO: Edit the vertex shader.
+precision mediump float;
+
+attribute  vec4 vPosition;
+attribute  vec4 vColor;
+
+varying vec4 fColor;
+
+uniform mat4 scaleMatrix;
+uniform mat4 rotateMatrix;
+uniform mat4 translateMatrix;
+
+void main()
+{
+    fColor = vColor;
+    gl_Position = translateMatrix * rotateMatrix * scaleMatrix * vPosition;
+    gl_Position.z = -gl_Position.z;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+varying vec4 fColor;
+
+void
+main()
+{
+    gl_FragColor = fColor;
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="objLoader.js"></script>
+<script type="text/javascript" src="bunny.js"></script>
+
+<body>
+<!--TODO: Edit the HTML file.-->
+size 0% <input id="slide" type="range" min="10" max="200" step="1" value="105" /> 100%
+<br/>
+<canvas id="gl-canvas" width="512"" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+
+<br/>
+
+<button id= "frontButton">FRONT VIEW</button>
+<button id= "backButton">BACK VIEW</button>
+<button id= "topButton">TOP VIEW</button>
+<button id= "bottomButton">BOTTOM VIEW</button>
+<button id= "leftButton">LEFT VIEW</button>
+<button id= "rightButton">RIGHT VIEW</button>
+
+</body>
+</html>
