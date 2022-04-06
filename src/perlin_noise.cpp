@@ -31,10 +31,20 @@ public:
     static float noise(float x, float y);
 };
 
+
 float PerlinNoise::interpolate(float a, float b, float weight) {
     // the simplest method of interpolation
     // might need a more complex method if in need of better results
     return a*(1-weight) + (b*weight);
+};
+
+Vector2 PerlinNoise::randomGradient(int x, int y) {
+    int randDir = PERMUTATION[(PERMUTATION[x] + y) % 256];
+    Vector2 v = {
+        (float)cos(randDir),    // x
+        (float)sin(randDir)     // y
+    };
+    return v;
 };
 
 int main(int argc, char *argv[]) {
