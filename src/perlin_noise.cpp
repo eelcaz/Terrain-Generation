@@ -54,22 +54,22 @@ float PerlinNoise::noise(float x, float y) {
     return interpolate(interp1, interp2, wy);
 }
 
-int main(int argc, char* argv[]) {
-    float n1, n2, n3;
-    n1 = PerlinNoise::noise(1.3, 1.6);
-    n2 = PerlinNoise::noise(85.24, 46.22);
-    n3 = PerlinNoise::noise(0.11, 39.9);
-    std::cout << "noise values:" << "\n";
-    std::cout << n1 << "\n";
-    std::cout << n2 << "\n";
-    std::cout << n3 << "\n";
+// int main(int argc, char *argv[]) {
+//     float n1, n2, n3;
+//     n1 = PerlinNoise::noise(1.3, 1.6);
+//     n2 = PerlinNoise::noise(85.24, 46.22);
+//     n3 = PerlinNoise::noise(0.11, 39.9);
+//     std::cout << "noise values:" << "\n";
+//     std::cout << n1 << "\n";
+//     std::cout << n2 << "\n";
+//     std::cout << n3 << "\n";
 
-    for (float i = 5; i < 8; i += 0.2) {
-        for (float j = 5; j < 8; j += 0.2) {
-            float val = PerlinNoise::noise(i, j);
-            std::cout << std::left << std::setw(12) << val << " ";
-        }
-        std::cout << "\n";
-    }
+//     for (float i = 44; i < 45; i += 0.1) {
+//         for (float j = 44; j < 45; j += 0.1) {
+//             float val = PerlinNoise::noise(i, j);
+//             std::cout << std::left << std::setw(12) << val << " ";
+//         }
+//         std::cout << "\n";
+//     }
 
-}
+// }
