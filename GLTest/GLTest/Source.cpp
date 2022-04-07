@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <string>
 #include <windows.h>
 #include <GL/glew.h> // include this one first
 #include <glm/glm.hpp>
@@ -22,7 +24,8 @@ out vec4 out_color;
 void main()
 {
 gl_Position = MVP * vec4(position, 1.0);
-out_color = vec4(gl_Position.xyz, 1.0);
+//out_color = vec4(gl_Position.xyz, 1.0);
+//out_color = vec4(in_color, 1.0);
 }
 )glsl";
 
@@ -36,12 +39,57 @@ uniform vec3 u_color;
 
 void main()
 {
-color = out_color;
-//color = vec4(u_color.xyz, 1.0);
+//color = out_color;
+color = vec4(u_color.xyz, 1.0);
 }
 )glsl";
 
 int main(int argc, char** argv) {
+
+	std::string line;
+	std::ifstream myfile("../message.txt");
+	float heights[2][16][16];
+	int i = 0;
+	int j = 0;
+	int k = 0;
+	int trackerS = 0;
+	int trackerE = 0;
+	if (myfile.is_open()) {
+		while (getline(myfile, line)) {
+			//std::cout << line << '\n';
+			//std::cout << line << std::endl;
+			for (j = 0; j < 16; j++) {
+				while (trackerS < line.length() && line[trackerS] == ' ') {
+					trackerS++;
+				}
+				trackerE = trackerS;
+				while (trackerE < line.length() && line[trackerE] != ' ') {
+					trackerE++;
+				}
+				heights[k][i][j] = std::stof(line.substr(trackerS, trackerE - trackerS));
+				//std::cout << heights[k][i][j] << " " << trackerS << " " << trackerE << std::endl;
+				trackerS = trackerE;
+			}
+			trackerS = 0;
+			trackerE = 0;
+
+			i++;
+			if (i == 16) {
+				i = 0;
+				k++;
+			}
+		}
+		myfile.close();
+	}
+	else std::cout << "Unable to open file";
+
+	for (k = 0; k < 2; k++)
+		for (i = 0; i < 16; i++) {
+			for (j = 0; j < 16; j++) {
+				//std::cout << heights[k][i][j] << ", " << std::endl;
+			}
+			//std::cout << " " << std::endl;
+		}
 
 	glfwInit();
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -123,12 +171,28 @@ int main(int argc, char** argv) {
 
 
 	// vertex data loading -- posx, posy, posz, r, g, b
-	GLfloat vertices[] = {
-		-1.0f, -1.0f, 0.0f,
-		1.0f, -1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f
+	GLfloat vertices[16*16*2*3] = {
+		//-1.0f, -1.0f, 0.0f,
+		//1.0f, -1.0f, 0.0f,
+		//0.0f, 1.0f, 0.0f
 	};
 
+	for (k = 0; k < 2; k++) {
+		for (i = 0; i < 16; i++) {
+			for (j = 0; j < 16; j++) {
+				vertices[k * 16 * 16 * 3 + i * 16 * 3 + j * 3 + 0] = i;
+				vertices[k * 16 * 16 * 3 + i * 16 * 3 + j * 3 + 2] = j + k * 16;
+				vertices[k * 16 * 16 * 3 + i * 16 * 3 + j * 3 + 1] = heights[k][i][j];
+				//std::cout << heights[k][i][j] << std::endl;
+			}
+		}
+	}
+	GLfloat second_verts[] = {
+		-50.0f, 0.0f, -10.0f,
+		50.0f, 0.0f, -10.0f,
+		50.0f, 0.0f, 50.0f,
+		-50.0f, 0.0f, 50.0f
+	};
 	GLuint elements[] = {
 		0, 1, 2, // first
 		0, 3, 2
@@ -144,7 +208,10 @@ int main(int argc, char** argv) {
 	// stream draw: data iwll change every frame
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+	GLuint VBO2;
+	glGenBuffers(1, &VBO2);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(second_verts), second_verts, GL_STATIC_DRAW);
 	// getting ready to send to shader
 	// first param is index, second param is number of indices
 	// third is type, fourth is for normalization
@@ -175,32 +242,46 @@ int main(int argc, char** argv) {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glBindVertexArray(0);
+
+	GLuint VAO2;
+	glGenVertexArrays(1, &VAO2);
+	glBindVertexArray(VAO2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBindVertexArray(0);
 
 	glUseProgram(shaderProgram);
 	glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), 1.0f, 0.5f, 0.5f);
+	//glUniform3f(glGetUniformLocation(shaderProgram, "in_color"), 1.0f, 0.5f, 0.5f);
 	glUseProgram(0);
 
-	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 200.0f);
 
 	//glm::mat4 Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f);
 
-	glm::mat4 View = glm::lookAt(
-		glm::vec3(4, 3, 3),
-		glm::vec3(0, 0, 0),
-		glm::vec3(0, 1, 0)
-	);
-	
+	glm::vec3 cameraPos = glm::vec3(8.5f, 3.0f, -5.0f);
+	glm::vec3 cameraFront = glm::vec3(0.0f, -1.0f, 5.0f);
+	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	glm::mat4 View = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	glm::mat4 Model = glm::mat4(1.0f);
 	glm::mat4 mvp = Projection * View * Model;
 
 	GLuint MatrixID = glGetUniformLocation(shaderProgram, "MVP");
 	
+	
 
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	glClearColor(0.0f, 0.4f, 0.4f, 0.0f);
+	glm::vec3 sky = glm::vec3(140.0f, 189.0f, 214.0f) / 255.0f;
+	glm::vec3 dirt = glm::vec3(155.0f, 118.0f, 83.0f) / 255.0f;
+	glm::vec3 grass = glm::vec3(86.0f, 125.0f, 70.0f) / 255.0f;
+	glClearColor(sky.x, sky.y, sky.z, 0.0f);
+	glPointSize(5);
 	do {
 		
 
@@ -219,8 +300,15 @@ int main(int argc, char** argv) {
 		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 		//glDrawArrays(GL_TRIANGLES, 0, 3); // could to GL_POINTS, GL_LINE_STRIP
 		glBindVertexArray(VAO);
-		//glDrawElements(GL_TRIANGLES, sizeof(elements)/sizeof(elements[0]), GL_UNSIGNED_INT, 0);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), grass.x, grass.y, grass.z);
+		glDrawArrays(GL_POINTS, 0, 16*16*2);
+		glBindVertexArray(0);
+		glBindVertexArray(VAO2);
+		glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), dirt.x, dirt.y, dirt.z);
+		glDrawElements(GL_TRIANGLES, sizeof(elements) / sizeof(elements[0]), GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		
+
 		//glBindVertexArray(0);
 		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 

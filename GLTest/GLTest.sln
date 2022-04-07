@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		GLTest\bunny.html = GLTest\bunny.html
 		GLTest\bunny.js = GLTest\bunny.js
 		GLTest\bunny.obj = GLTest\bunny.obj
+		message.txt = message.txt
 		GLTest\objLoader.js = GLTest\objLoader.js
 	EndProjectSection
 EndProject
