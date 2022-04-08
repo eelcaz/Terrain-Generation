@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 #include <windows.h>
 #include <GL/glew.h> // include this one first
 #include <glm/glm.hpp>
@@ -8,8 +9,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
 
-#define WIDTH 1024
-#define HEIGHT 768
+#define WIDTH 1920
+#define HEIGHT 1080
+
+#define NUM_CHUNKS 1
+#define CHUNK_SIZE 256
 
 // location = 0 bc of attrib pointer
 const GLchar* vertexShaderSource = R"glsl(
@@ -24,8 +28,7 @@ out vec4 out_color;
 void main()
 {
 gl_Position = MVP * vec4(position, 1.0);
-//out_color = vec4(gl_Position.xyz, 1.0);
-//out_color = vec4(in_color, 1.0);
+out_color = vec4(gl_Position.y, gl_Position.y, gl_Position.y, 1.0);
 }
 )glsl";
 
@@ -39,16 +42,29 @@ uniform vec3 u_color;
 
 void main()
 {
-//color = out_color;
+color = out_color;
 color = vec4(u_color.xyz, 1.0);
 }
 )glsl";
 
+glm::vec3 cameraPos = glm::vec3(0.0f, 70.0f, 40.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float pitch = 0.0f;
+float yaw = -90.0f;
+
+bool firstMouse = true;
+float lastX = WIDTH / 2.0f, lastY = HEIGHT / 2.0f;
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
 int main(int argc, char** argv) {
 
 	std::string line;
-	std::ifstream myfile("../message.txt");
-	float heights[2][16][16];
+	std::ifstream myfile("../perlin.txt");
+	float heights[NUM_CHUNKS][CHUNK_SIZE][CHUNK_SIZE];
 	int i = 0;
 	int j = 0;
 	int k = 0;
@@ -58,7 +74,7 @@ int main(int argc, char** argv) {
 		while (getline(myfile, line)) {
 			//std::cout << line << '\n';
 			//std::cout << line << std::endl;
-			for (j = 0; j < 16; j++) {
+			for (j = 0; j < CHUNK_SIZE; j++) {
 				while (trackerS < line.length() && line[trackerS] == ' ') {
 					trackerS++;
 				}
@@ -74,7 +90,7 @@ int main(int argc, char** argv) {
 			trackerE = 0;
 
 			i++;
-			if (i == 16) {
+			if (i == CHUNK_SIZE) {
 				i = 0;
 				k++;
 			}
@@ -82,14 +98,6 @@ int main(int argc, char** argv) {
 		myfile.close();
 	}
 	else std::cout << "Unable to open file";
-
-	for (k = 0; k < 2; k++)
-		for (i = 0; i < 16; i++) {
-			for (j = 0; j < 16; j++) {
-				//std::cout << heights[k][i][j] << ", " << std::endl;
-			}
-			//std::cout << " " << std::endl;
-		}
 
 	glfwInit();
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -171,47 +179,69 @@ int main(int argc, char** argv) {
 
 
 	// vertex data loading -- posx, posy, posz, r, g, b
-	GLfloat vertices[16*16*2*3] = {
-		//-1.0f, -1.0f, 0.0f,
-		//1.0f, -1.0f, 0.0f,
-		//0.0f, 1.0f, 0.0f
-	};
-
-	for (k = 0; k < 2; k++) {
-		for (i = 0; i < 16; i++) {
-			for (j = 0; j < 16; j++) {
-				vertices[k * 16 * 16 * 3 + i * 16 * 3 + j * 3 + 0] = i;
-				vertices[k * 16 * 16 * 3 + i * 16 * 3 + j * 3 + 2] = j + k * 16;
-				vertices[k * 16 * 16 * 3 + i * 16 * 3 + j * 3 + 1] = heights[k][i][j];
-				//std::cout << heights[k][i][j] << std::endl;
+	std::vector<GLfloat> vertices(CHUNK_SIZE* CHUNK_SIZE* NUM_CHUNKS * 3);
+	//GLfloat vertices[CHUNK_SIZE * CHUNK_SIZE * NUM_CHUNKS * 3];
+	std::vector<GLuint> elements((CHUNK_SIZE-1)*(CHUNK_SIZE-1)*NUM_CHUNKS*3*2);
+	for (k = 0; k < NUM_CHUNKS; k++) {
+		for (i = 0; i < CHUNK_SIZE; i++) {
+			for (j = 0; j < CHUNK_SIZE; j++) {
+				int cur = k * CHUNK_SIZE * CHUNK_SIZE * 3 + i * CHUNK_SIZE * 3 + j * 3;
+				vertices[cur + 0] = i-CHUNK_SIZE/2.0f;
+				vertices[cur + 2] = -j - k * 16;
+				vertices[cur + 1] = heights[k][i][j];
 			}
 		}
 	}
+	int l = 0;
+	for (k = 0; k < NUM_CHUNKS; k++) {
+		for (i = 0; i < CHUNK_SIZE-1; i++) {
+			for (j = 0; j < CHUNK_SIZE-1; j++) {
+				int index = k * (CHUNK_SIZE-1) * (CHUNK_SIZE-1) + i * (CHUNK_SIZE-1) + j;
+				int vertIndex = k * CHUNK_SIZE * CHUNK_SIZE + i * CHUNK_SIZE + j;
+				
+				elements[l++] = vertIndex;
+				elements[l++] = vertIndex + CHUNK_SIZE;
+				elements[l++] = vertIndex + CHUNK_SIZE+1;
+				elements[l++] = vertIndex;
+				elements[l++] = vertIndex + 1;
+				elements[l++] = vertIndex + CHUNK_SIZE+1;
+			}
+		}
+	}
+
 	GLfloat second_verts[] = {
-		-50.0f, 0.0f, -10.0f,
-		50.0f, 0.0f, -10.0f,
+		-50.0f, 0.0f, -50.0f,
+		50.0f, 0.0f, -50.0f,
 		50.0f, 0.0f, 50.0f,
 		-50.0f, 0.0f, 50.0f
 	};
-	GLuint elements[] = {
-		0, 1, 2, // first
+	GLuint second_elements[] = {
+		0, 1, 2,
 		0, 3, 2
 	};
 
 	GLuint VBO;
-	// first arg is number of buffers, second arg is buffer
 	glGenBuffers(1, &VBO);
-	// everything below will be on this buffer
+
+	GLuint EBO;
+	glGenBuffers(1, &EBO);
+
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	// static draw: the data won't change very much
-	// dynamic draw: data is likely to change
-	// stream draw: data iwll change every frame
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements.size() * sizeof(GLuint), &elements[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+
 	GLuint VBO2;
 	glGenBuffers(1, &VBO2);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO2);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(second_verts), second_verts, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	// getting ready to send to shader
 	// first param is index, second param is number of indices
 	// third is type, fourth is for normalization
@@ -228,31 +258,21 @@ int main(int argc, char** argv) {
 	// unbinding is just binding to 0 ; vao handles this
 	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	GLuint EBO;
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STATIC_DRAW);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); vao handles
+	GLuint EBO2;
+	glGenBuffers(1, &EBO2);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(second_elements), second_elements, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	GLuint VAO; // like a container for the vertex buffer and element buffer
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-	glBindVertexArray(0);
 
 	GLuint VAO2;
 	glGenVertexArrays(1, &VAO2);
 	glBindVertexArray(VAO2);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
 	glBindVertexArray(0);
 
 	glUseProgram(shaderProgram);
@@ -260,31 +280,36 @@ int main(int argc, char** argv) {
 	//glUniform3f(glGetUniformLocation(shaderProgram, "in_color"), 1.0f, 0.5f, 0.5f);
 	glUseProgram(0);
 
-	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 200.0f);
+	glm::mat4 Projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
 
 	//glm::mat4 Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f);
-
-	glm::vec3 cameraPos = glm::vec3(8.5f, 3.0f, -5.0f);
-	glm::vec3 cameraFront = glm::vec3(0.0f, -1.0f, 5.0f);
-	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	
+	//lookAt takes in camera position, target position, and up in the world space
 
 	glm::mat4 View = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	glm::mat4 Model = glm::mat4(1.0f);
+	Model = glm::translate(Model, glm::vec3(0.0f, 0.0f, 0.0f));
 	glm::mat4 mvp = Projection * View * Model;
 
 	GLuint MatrixID = glGetUniformLocation(shaderProgram, "MVP");
 	
 	
 
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	void processInput(GLFWwindow* window);
+	
 	glm::vec3 sky = glm::vec3(140.0f, 189.0f, 214.0f) / 255.0f;
 	glm::vec3 dirt = glm::vec3(155.0f, 118.0f, 83.0f) / 255.0f;
 	glm::vec3 grass = glm::vec3(86.0f, 125.0f, 70.0f) / 255.0f;
 	glClearColor(sky.x, sky.y, sky.z, 0.0f);
-	glPointSize(5);
+	//glPointSize(5);
 	do {
-		
-
+		processInput(window);
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 		//float red = sin(glfwGetTime());
 		//float green = sin(glfwGetTime()/2);
 		//float blue = sin(glfwGetTime()*0.9);
@@ -301,14 +326,17 @@ int main(int argc, char** argv) {
 		//glDrawArrays(GL_TRIANGLES, 0, 3); // could to GL_POINTS, GL_LINE_STRIP
 		glBindVertexArray(VAO);
 		glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), grass.x, grass.y, grass.z);
-		glDrawArrays(GL_POINTS, 0, 16*16*2);
+		glDrawElements(GL_TRIANGLES, elements.size(), GL_UNSIGNED_INT, 0);
+		//glDrawArrays(GL_TRIANGLE_STRIP, 0, 16*16*2);
 		glBindVertexArray(0);
 		glBindVertexArray(VAO2);
+		//glDrawElements(GL_TRIANGLES, sizeof(second_elements) / sizeof(elements[0]), GL_UNSIGNED_INT, 0);
 		glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), dirt.x, dirt.y, dirt.z);
-		glDrawElements(GL_TRIANGLES, sizeof(elements) / sizeof(elements[0]), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, sizeof(second_elements) / sizeof(second_elements[0]), GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 		
-
+		View = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		mvp = Projection * View * Model;
 		//glBindVertexArray(0);
 		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -316,16 +344,72 @@ int main(int argc, char** argv) {
 		glfwSwapBuffers(window);
 		// tells OS to wait for events to occur etc
 		glfwPollEvents();
-
-	} while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-		!glfwWindowShouldClose(window));
+		
+	} while (!glfwWindowShouldClose(window));
 
 	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &VBO2);
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 	glDeleteBuffers(1, &EBO);
+	glDeleteBuffers(1, &EBO2);
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return EXIT_SUCCESS;
+}
+
+void processInput(GLFWwindow* window) {
+	const float cameraSpeed = 25.0f * deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		cameraPos += cameraSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		cameraPos -= cameraSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		cameraPos -= cameraSpeed * cameraUp;
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		cameraPos += cameraSpeed * cameraUp;
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos;
+	lastX = xpos;
+	lastY = ypos;
+
+	float sensitivity = 0.1f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw += xoffset;
+	pitch += yoffset;
+
+	if (pitch > 89.0f)
+		pitch = 89.0f;
+	if (pitch < -89.0f)
+		pitch = -89.0f;
+
+	glm::vec3 direction;
+	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	direction.y = sin(glm::radians(pitch));
+	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(direction);
 }
