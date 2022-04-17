@@ -6,11 +6,9 @@
 
 
 float PerlinNoise::interpolate(float a, float b, float weight) {
-    // the simplest method of interpolation
-    // might need a more complex method if in need of better results
     if (weight < 0) return a;
     if (weight > 1) return b;
-    return a * (1 - weight) + (b * weight);
+    return (b - a) * ((weight * (weight * 6.0 - 15.0) + 10.0) * weight * weight * weight) + a;
 };
 
 Vector2 PerlinNoise::randomGradient(int x, int y) {

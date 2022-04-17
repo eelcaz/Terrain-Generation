@@ -12,7 +12,7 @@
 #define WIDTH 1920
 #define HEIGHT 1080
 
-#define NUM_CHUNKS 1
+#define NUM_CHUNKS 2
 #define CHUNK_SIZE 256
 
 // location = 0 bc of attrib pointer
@@ -63,7 +63,7 @@ float lastFrame = 0.0f;
 int main(int argc, char** argv) {
 
 	std::string line;
-	std::ifstream myfile("../perlin.txt");
+	std::ifstream myfile("../perlin_fbm_good_2chunks.txt");
 	float heights[NUM_CHUNKS][CHUNK_SIZE][CHUNK_SIZE];
 	int i = 0;
 	int j = 0;
@@ -186,8 +186,11 @@ int main(int argc, char** argv) {
 		for (i = 0; i < CHUNK_SIZE; i++) {
 			for (j = 0; j < CHUNK_SIZE; j++) {
 				int cur = k * CHUNK_SIZE * CHUNK_SIZE * 3 + i * CHUNK_SIZE * 3 + j * 3;
-				vertices[cur + 0] = i-CHUNK_SIZE/2.0f;
-				vertices[cur + 2] = -j - k * 16;
+				//vertices[cur + 0] = i-CHUNK_SIZE/2.0f;
+				//vertices[cur + 2] = -j - k * CHUNK_SIZE;
+				//vertices[cur + 1] = heights[k][i][j];
+				vertices[cur + 0] = i - CHUNK_SIZE / 2.0f + k * CHUNK_SIZE;
+				vertices[cur + 2] = -j;
 				vertices[cur + 1] = heights[k][i][j];
 			}
 		}
