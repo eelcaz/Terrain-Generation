@@ -6,96 +6,39 @@
 #include "terrain_mesh.h"
 #include "perlin_noise.h"
 
-float Terrain::fbmNoise(float x, float y, int octaves) {
-    // placeholder values, will probable want this customizable in the future
-    float total = 0;
-    float frequency = 1;
-    float amplitude = 1;
-    float gain = 4;
-    float maxVal = 0;
-    for (int i = 0; i < octaves; ++i) {
-        total += PerlinNoise::noise(x*frequency, y*frequency) * amplitude;
-        maxVal += amplitude;
-        amplitude = pow(amplitude, 0.58);
-        frequency *= 2;
-    }
-    // for (i = 0; i < octaves; ++i) {
-    //     total += noise((float)x * frequency,
-    //                    (float)y * frequency) * amplitude;
-    //     frequency *= lacunarity;
-    //     amplitude *= gain;
-    // }
-    // map[x][y]=total;
-    return total/maxVal;
-};
-
-float Terrain::fbmNoise2(float x, float y, int octaves) {
-    // placeholder values, will probable want this customizable in the future
+double Terrain::fbmNoise(double z, double x, int octaves) {
     float total = 0.0;
-    // float amplitude = 0.5;
-    // float gain = 4;
-    // float frequency = 1;
     float maxVal = 0;
     for (int i = 0; i < octaves; ++i) {
         float amplitude = pow(0.58f, i);
         float frequency = pow(2.0f, i);
-        total += PerlinNoise::noise(x*frequency, y*frequency) * amplitude;
+        total += PerlinNoise::noise(z*frequency, x*frequency) * amplitude;
         maxVal += amplitude;
     }
-    // for (i = 0; i < octaves; ++i) {
-    //     total += noise((float)x * frequency,
-    //                    (float)y * frequency) * amplitude;
-    //     frequency *= lacunarity;
-    //     amplitude *= gain;
-    // }
-    // map[x][y]=total;
     return total/maxVal;
 };
 
-std::array<std::array<float, CHUNK_WIDTH>, CHUNK_WIDTH>
-Terrain::generateChunkHeightMap(int chunkX, int chunkY) {
-    std::array<std::array<float, CHUNK_WIDTH>, CHUNK_WIDTH> heightMap;
-
-    for (int x = 0; x < CHUNK_WIDTH; ++x) {
-        for (int y = 0; y < CHUNK_WIDTH; ++y) {
-            float offset = 0.5/CHUNK_WIDTH;
-            // float val = fbmNoise(
-            //     chunkX + ((float)x/CHUNK_WIDTH) + offset,
-            //     chunkY + ((float)y/CHUNK_WIDTH) + offset,
-            //     4
-            // );
-            // heightMap[x][y] = (val + 1.0f)/2.0f; // make positive [0-1]
-            float val = PerlinNoise::noise(
-                chunkX + ((float)x/CHUNK_WIDTH) + offset,
-                chunkY + ((float)y/CHUNK_WIDTH) + offset
-            );
-            val = (val + 1.0f)/2.0f;
-            heightMap[x][y] = (val * 105) - 18;
-        }
+int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
+    // allocate new chunk heightmap
+    int **heightMap = new int*[CHUNK_WIDTH];
+    for (int z = 0; z < CHUNK_WIDTH; ++z) {
+        heightMap[z] = new int[CHUNK_WIDTH];
     }
 
-    // change values into a more usable scale
-    return heightMap;
-};
-
-std::array<std::array<unsigned char, CHUNK_WIDTH>, CHUNK_WIDTH>
-Terrain::generateChunkHeightMapInt(int chunkX, int chunkY) {
-    std::array<std::array<unsigned char, CHUNK_WIDTH>, CHUNK_WIDTH> heightMap;
-
-    for (int y = 0; y < CHUNK_WIDTH; ++y) {
+    for (int z = 0; z < CHUNK_WIDTH; ++z) {
         for (int x = 0; x < CHUNK_WIDTH; ++x) {
-            float offset = 0.5/CHUNK_WIDTH;
-            float val = fbmNoise2(
-                chunkX + ((float)x/CHUNK_WIDTH) + offset,
-                chunkY + ((float)y/CHUNK_WIDTH) + offset,
-                4
+            double offset = (double)1/(2*CHUNK_WIDTH);
+            double val = fbmNoise(
+                (chunkZ + offset + (double)z/CHUNK_WIDTH)/TERRAIN_ZOOM,
+                (chunkX + offset + (double)x/CHUNK_WIDTH)/TERRAIN_ZOOM,
+                6
             );
-            val = (val + 1.0f)/2.0f;
-            heightMap[x][y] = static_cast<unsigned char>((val * 105) - 36);
+            val = (val + 1) / 2;
+            val = (int)(val * TERRAIN_AMPLITUDE);
+            heightMap[z][x] = val;
         }
     }
 
-    // change values into a more usable scale
     return heightMap;
 };
 
