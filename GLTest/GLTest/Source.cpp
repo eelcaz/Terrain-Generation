@@ -186,9 +186,6 @@ int main(int argc, char** argv) {
 		for (i = 0; i < CHUNK_SIZE; i++) {
 			for (j = 0; j < CHUNK_SIZE; j++) {
 				int cur = k * CHUNK_SIZE * CHUNK_SIZE * 3 + i * CHUNK_SIZE * 3 + j * 3;
-				//vertices[cur + 0] = i-CHUNK_SIZE/2.0f;
-				//vertices[cur + 2] = -j - k * CHUNK_SIZE;
-				//vertices[cur + 1] = heights[k][i][j];
 				vertices[cur + 0] = i - CHUNK_SIZE / 2.0f + k * CHUNK_SIZE;
 				vertices[cur + 2] = -j;
 				vertices[cur + 1] = heights[k][i][j];
