@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -84,25 +83,42 @@ void chunkImageWriter(std::string filename,
     fp.close();
 };
 
-void chunkImageWriterVert(std::string filename,
-                          std::array<std::array<unsigned char, CHUNK_WIDTH>, CHUNK_WIDTH> c1,
-                          std::array<std::array<unsigned char, CHUNK_WIDTH>, CHUNK_WIDTH> c2) {
+void chunkImageWriterVert2(std::string filename, int** c1, int** c2) {
     std::ofstream fp;
     fp.open(filename);
 
     fp << "P6\n";
-    fp << CHUNK_WIDTH << " " << CHUNK_WIDTH*2 << "\n" << 50 << "\n";
+    fp << CHUNK_WIDTH << " " << CHUNK_WIDTH*2 << "\n" << 100 << "\n";
 
-    for (int i = 0; i < CHUNK_WIDTH; ++i) {
-        for (int j = 0; j < CHUNK_WIDTH; ++j) {
-            unsigned char uc = c1[i][j];
+    for (int z = 0; z < CHUNK_WIDTH; ++z) {
+        for (int x = 0; x < CHUNK_WIDTH; ++x) {
+            unsigned char uc = (unsigned char)c1[z][x];
             fp << uc << uc << uc;
         }
     }
-    for (int i = 0; i < CHUNK_WIDTH; ++i) {
-        for (int j = 0; j < CHUNK_WIDTH; ++j) {
-            unsigned char uc = c2[i][j];
+    for (int z = 0; z < CHUNK_WIDTH; ++z) {
+        for (int x = 0; x < CHUNK_WIDTH; ++x) {
+            unsigned char uc = (unsigned char)c2[z][x];
             fp << uc << uc << uc;
+        }
+    }
+    fp << std::endl;
+    fp.close();
+};
+
+void chunkImageWriterList(std::string filename, int*** chunkList) {
+    int chunkListLen = sizeof(chunkList);
+    std::ofstream fp;
+    fp.open(filename);
+
+    fp << "P6\n";
+    fp << CHUNK_WIDTH << " " << CHUNK_WIDTH*chunkListLen << "\n" << 100 << "\n";
+    for (int i = 0; i < chunkListLen; ++i) {
+        for (int z = 0; z < CHUNK_WIDTH; ++z) {
+            for (int x = 0; x < CHUNK_WIDTH; ++x) {
+                unsigned char uc = (unsigned char)chunkList[i][z][x];
+                fp << uc << uc << uc;
+            }
         }
     }
     fp << std::endl;
@@ -124,29 +140,43 @@ void chunkWriter(std::string filename,
     fp.close();
 };
 
-void chunkWriterVert(std::string filename,
-                     std::array<std::array<unsigned char, CHUNK_WIDTH>, CHUNK_WIDTH> c1,
-                     std::array<std::array<unsigned char, CHUNK_WIDTH>, CHUNK_WIDTH> c2) {
+void chunkWriterVert2(std::string filename, int** c1, int** c2) {
     std::ofstream fp;
     fp.open(filename);
 
-    for (int i = 0; i < CHUNK_WIDTH; ++i) {
-        for (int j = 0; j < CHUNK_WIDTH; ++j) {
-            fp << (int)c1[i][j] << " ";
+    for (int z = 0; z < CHUNK_WIDTH; ++z) {
+        for (int x = 0; x < CHUNK_WIDTH; ++x) {
+            fp << (int)c1[z][x] << " ";
         }
         fp << "\n";
     }
-    for (int i = 0; i < CHUNK_WIDTH; ++i) {
-        for (int j = 0; j < CHUNK_WIDTH; ++j) {
-            fp << (int)c2[i][j] << " ";
+    for (int z = 0; z < CHUNK_WIDTH; ++z) {
+        for (int x = 0; x < CHUNK_WIDTH; ++x) {
+            fp << (int)c2[z][x] << " ";
         }
-        fp << "\n";
+        if (z != CHUNK_WIDTH - 1) {
+            fp << "\n";
+        }
     }
-    fp << std::endl;
     fp.close();
 };
-                
 
+void chunkWriterList(std::string filename, int*** chunkList) {
+    int chunkListLen = sizeof(chunkList);
+    std::ofstream fp;
+    fp.open(filename);
+    for (int i = 0; i < chunkListLen; ++i) {
+        for (int z = 0; z < CHUNK_WIDTH; ++z) {
+            for (int x = 0; x < CHUNK_WIDTH; ++x) {
+                fp << (int)chunkList[i][z][x] << " ";
+            }
+            if (z != CHUNK_WIDTH - 1 || i != chunkListLen - 1) {
+                fp << "\n";
+            }
+        }
+    }
+    fp.close();
+}
 int main(int argc, char *argv[]) {
     // auto c0_0 = Terrain::generateChunkHeightMap(5, 0);
     // auto c0_1 = Terrain::generateChunkHeightMap(6, 0);
