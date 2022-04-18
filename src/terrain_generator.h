@@ -10,4 +10,5 @@ private:
     static const int TERRAIN_ZOOM = 16;
 public:;
     static int** generateChunkHeightMap(int z, int x);
+    static int*** generateChunkData(int z, int x);
 };

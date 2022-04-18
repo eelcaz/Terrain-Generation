@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <math.h>
 
-#include "terrain_mesh.h"
+#include "terrain_generator.h"
 
 void imageWriteChunk(std::string filename, int** chunk) {
     std::ofstream fp;

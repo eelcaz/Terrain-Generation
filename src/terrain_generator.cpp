@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <math.h>
 
-#include "terrain_mesh.h"
+#include "terrain_generator.h"
 #include "perlin_noise.h"
 
 double Terrain::fbmNoise(double z, double x, int octaves) {
