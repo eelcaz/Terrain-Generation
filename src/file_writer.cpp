@@ -74,16 +74,17 @@ void plainTextWriteChunkList(std::string filename, int*** chunkList, int len) {
 }
 
 int main(int argc, char *argv[]) {
-    auto chunkList = new int **[16];
-    for (int i = 0; i < 16; ++i) {
-        chunkList[i] = Terrain::generateChunkHeightMap(i, 0);
+    int numChunks = 16;
+    auto chunkList = new int **[numChunks];
+    for (int i = 0; i < numChunks; ++i) {
+        chunkList[i] = Terrain::generateChunkHeightMap(i-numChunks/2, 0);
     }
-    imageWriteChunk("1chunk.ppm", chunkList[0]);
-    imageWriteChunkList("16chunks.ppm", chunkList, 16);
-    plainTextWriteChunk("1chunk.txt", chunkList[0]);
-    plainTextWriteChunkList("16chunks.txt", chunkList, 16);
+    imageWriteChunk("chunk.ppm", chunkList[0]);
+    imageWriteChunkList("chunks.ppm", chunkList, numChunks);
+    plainTextWriteChunk("chunk.txt", chunkList[0]);
+    plainTextWriteChunkList("chunks.txt", chunkList, numChunks);
     // deallocate
-    for (int i = 0; i < 16; ++i) {
+    for (int i = 0; i < numChunks; ++i) {
         delete[] chunkList[i];
     }
     delete[] chunkList;
