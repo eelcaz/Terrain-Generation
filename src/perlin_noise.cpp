@@ -11,45 +11,45 @@ double PerlinNoise::interpolate(double a, double b, double weight) {
     return (b - a) * ((weight * (weight * 6.0 - 15.0) + 10.0) * weight * weight * weight) + a;
 };
 
-Vector2 PerlinNoise::randomGradient(int x, int y) {
-    int randDir = PERMUTATION[(PERMUTATION[x] + y) % 256];
+Vector2 PerlinNoise::randomGradient(int z, int x) {
+    int randDir = PERMUTATION[(PERMUTATION[z] + x) % 256];
     Vector2 v = {
-        (float)cos(randDir),    // x
-        (float)sin(randDir)     // y
+        (float)cos(randDir),    // z
+        (float)sin(randDir)     // x
     };
     return v;
 };
 
-double PerlinNoise::dotProduct(int xGrid, int yGrid, double px, double py) {
-    Vector2 gradient = randomGradient(xGrid, yGrid);
+double PerlinNoise::dotProduct(int GridZ, int GridX, double pz, double px) {
+    Vector2 gradient = randomGradient(GridZ, GridX);
     // get the offset vector from the grid point to the target point
     Vector2 offsetVector = {
-        px - (double)xGrid,      // x
-        py - (double)yGrid       // y
+        pz - (double)GridZ,      // z
+        px - (double)GridX       // x
     };
-    return gradient.x * offsetVector.x + gradient.y * offsetVector.y;
+    return gradient.z * offsetVector.z + gradient.x * offsetVector.x;
 };
 
-double PerlinNoise::noise(double x, double y) {
+double PerlinNoise::noise(double z, double x) {
+    int zGrid0 = (int)floor(z);
     int xGrid0 = (int)floor(x);
-    int yGrid0 = (int)floor(y);
+    int zGrid1 = zGrid0 + 1;
     int xGrid1 = xGrid0 + 1;
-    int yGrid1 = yGrid0 + 1;
 
     // calculate weights
+    double wz = z - (double)zGrid0;
     double wx = x - (double)xGrid0;
-    double wy = y - (double)yGrid0;
 
     double dot1, dot2, interp1, interp2;
-    dot1 = dotProduct(xGrid0, yGrid0, x, y);
-    dot2 = dotProduct(xGrid1, yGrid0, x, y);
-    interp1 = interpolate(dot1, dot2, wx);
+    dot1 = dotProduct(zGrid0, xGrid0, z, x);
+    dot2 = dotProduct(zGrid1, xGrid0, z, x);
+    interp1 = interpolate(dot1, dot2, wz);
 
-    dot1 = dotProduct(xGrid0, yGrid1, x, y);
-    dot2 = dotProduct(xGrid1, yGrid1, x, y);
-    interp2 = interpolate(dot1, dot2, wx);
+    dot1 = dotProduct(zGrid0, xGrid1, z, x);
+    dot2 = dotProduct(zGrid1, xGrid1, z, x);
+    interp2 = interpolate(dot1, dot2, wz);
 
-    return interpolate(interp1, interp2, wy);
+    return interpolate(interp1, interp2, wx);
 }
 
 // int main(int argc, char *argv[]) {
@@ -62,9 +62,9 @@ double PerlinNoise::noise(double x, double y) {
 //     std::cout << n2 << "\n";
 //     std::cout << n3 << "\n";
 
-//     for (double i = 0.05; i < 1; i += 0.1) {
-//         for (double j = 0.05; j < 1; j += 0.1) {
-//             double val = PerlinNoise::noise(i, j);
+//     for (double z = 0.05; z < 1; z += 0.1) {
+//         for (double x = 0.05; x < 1; x += 0.1) {
+//             double val = PerlinNoise::noise(z, x);
 //             val = (val + 1)/2;
 //             val = (int)(val * 100);
 //             std::cout << std::left << std::setw(12) << val << " ";

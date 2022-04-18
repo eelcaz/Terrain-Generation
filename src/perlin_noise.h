@@ -1,6 +1,6 @@
 struct Vector2 {
+    double z;
     double x;
-    double y;
 };
 
 class PerlinNoise {
@@ -26,7 +26,7 @@ private:
     };
 public:
     static double interpolate(double a, double b, double weight);
-    static double dotProduct(int gridX, int gridY, double x, double y);
-    static Vector2 randomGradient(int x, int y);
-    static double noise(double x, double y);
+    static double dotProduct(int gridZ, int gridX, double z, double x);
+    static Vector2 randomGradient(int z, int x);
+    static double noise(double z, double x);
 };
