@@ -1,28 +1,10 @@
-#include <array>
-#include "perlin_noise.h"
+
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 
-
-const int CHUNK_WIDTH = 256; // 16 * 16,
-
-struct chunk {
-    int width;
-};
-
-class Terrain {
-private:
-    static float fbmNoise(float x, float y, int octaves);
-    static float fbmNoise2(float x, float y, int octaves);
-public:
-    static std::array<std::array<float, CHUNK_WIDTH>, CHUNK_WIDTH>
-    generateChunkHeightMap(int x, int y);
-    static std::array<std::array<unsigned char, CHUNK_WIDTH>, CHUNK_WIDTH>
-    generateChunkHeightMapInt(int chunkX, int chunkY);
-    static std::array<std::array<unsigned char, CHUNK_WIDTH>, CHUNK_WIDTH>
-    generateChunkHeightMapInt2(int chunkX, int chunkY);
-};
+#include "terrain_mesh.h"
+#include "perlin_noise.h"
 
 float Terrain::fbmNoise(float x, float y, int octaves) {
     // placeholder values, will probable want this customizable in the future
