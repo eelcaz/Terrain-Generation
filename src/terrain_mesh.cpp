@@ -178,15 +178,17 @@ void chunkWriterList(std::string filename, int*** chunkList) {
     fp.close();
 }
 int main(int argc, char *argv[]) {
-    // auto c0_0 = Terrain::generateChunkHeightMap(5, 0);
-    // auto c0_1 = Terrain::generateChunkHeightMap(6, 0);
-    auto c1 = Terrain::generateChunkHeightMapInt(5, 57);
-    auto c2 = Terrain::generateChunkHeightMapInt(6, 57);
+    auto chunkList = new int **[16];
+    for (int i = 0; i < 16; ++i) {
+        chunkList[i] = Terrain::generateChunkHeightMap(i, 0);
+    }
     std::string str = "perlin.ppm";
-    // std::cout << CHUNK_WIDTH << "\n" << std::endl;
-    std::cout << std::endl;
-    chunkImageWriterVert(str, c1, c2);
-    std::string mname = "perlin.txt";
+    chunkImageWriterList(str, chunkList);
+    std::string mname = "message.txt";
     // chunkWriter(mname, c1);
-    chunkWriterVert(mname, c1, c2);
+    chunkWriterList(mname, chunkList);
+    for (int i = 0; i < 16; ++i) {
+        delete[] chunkList[i];
+    }
+    delete[] chunkList;
 }
