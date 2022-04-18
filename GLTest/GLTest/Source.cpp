@@ -12,8 +12,8 @@
 #define WIDTH 1920
 #define HEIGHT 1080
 
-#define NUM_CHUNKS 2
-#define CHUNK_SIZE 256
+#define NUM_CHUNKS 16
+#define CHUNK_SIZE 16
 
 // location = 0 bc of attrib pointer
 const GLchar* vertexShaderSource = R"glsl(
@@ -63,7 +63,7 @@ float lastFrame = 0.0f;
 int main(int argc, char** argv) {
 
 	std::string line;
-	std::ifstream myfile("../perlin_fbm_good_2chunks.txt");
+	std::ifstream myfile("../message.txt");
 	float heights[NUM_CHUNKS][CHUNK_SIZE][CHUNK_SIZE];
 	int i = 0;
 	int j = 0;
