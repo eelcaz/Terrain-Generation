@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <math.h>
 
 #include "terrain_mesh.h"
 #include "perlin_noise.h"
@@ -33,7 +34,7 @@ int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
                 6
             );
             val = (val + 1) / 2;
-            val = (int)(val * TERRAIN_AMPLITUDE);
+            val = (int)floor(val * TERRAIN_AMPLITUDE);
             heightMap[z][x] = val;
         }
     }

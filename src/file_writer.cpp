@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <math.h>
 
 #include "terrain_mesh.h"
 
@@ -46,7 +47,7 @@ void plainTextWriteChunk(std::string filename, int** chunk) {
 
     for (int z = 0; z < CHUNK_WIDTH; ++z) {
         for (int x = 0; x < CHUNK_WIDTH; ++x) {
-            fp << (int)chunk[z][x] << " ";
+            fp << (int)floor(chunk[z][x]) << " ";
         }
         if (z != CHUNK_WIDTH - 1) {
             fp << std::endl;
@@ -62,7 +63,7 @@ void plainTextWriteChunkList(std::string filename, int*** chunkList, int len) {
     for (int i = 0; i < len; ++i) {
         for (int z = 0; z < CHUNK_WIDTH; ++z) {
             for (int x = 0; x < CHUNK_WIDTH; ++x) {
-                fp << (int)chunkList[i][z][x] << " ";
+                fp << (int)floor(chunkList[i][z][x]) << " ";
             }
             if (z != CHUNK_WIDTH - 1 || i != len - 1) {
                 fp << std::endl;
