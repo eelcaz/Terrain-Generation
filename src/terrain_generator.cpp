@@ -41,3 +41,27 @@ int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
 
     return heightMap;
 };
+
+int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
+    // allocate data for whole chunk, zero initialized
+    int ***chunk = new int**[CHUNK_HEIGHT];
+    for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+        chunk[y] = new int*[CHUNK_WIDTH];
+        for (int z = 0; z < CHUNK_WIDTH; ++z) {
+            chunk[y][z] = new int[CHUNK_WIDTH]{0};
+        }
+    }
+
+    auto heightMap = generateChunkHeightMap(chunkZ, chunkX);
+    // solid parts of chunk will have value of 1, otherwise 0
+    for (int z = 0; z < CHUNK_WIDTH; ++z) {
+        for (int x = 0; x < CHUNK_WIDTH; ++x) {
+            for (int y = 0; y < heightMap[z][x]; ++y) {
+                chunk[y][z][x] = 1;
+            }
+        }
+    }
+
+    return chunk;
+};
+
