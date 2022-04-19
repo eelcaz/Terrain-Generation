@@ -29,7 +29,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -96,7 +96,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>E:\Library\projects\Terrain-Generation\GLTest\Dependencies\glew-2.1.0\lib\Release\Win32;E:\Library\projects\Terrain-Generation\GLTest\Dependencies\GLFW\lib-vc2019;C:\Users\zackl\source\repos\GLTest\Dependencies\GLFW\lib-vc2019;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\Library\projects\Terrain-Generation\GLTest\Dependencies\glew-2.1.0\lib\Release\Win32;E:\Library\projects\Terrain-Generation\GLTest\Dependencies\GLFW\lib-vc2019;C:\Users\zackl\source\repos\GLTest\Dependencies\GLFW\lib-vc2019;C:\Users\zackl\source\repos\GLTest\Dependencies\GLEW\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

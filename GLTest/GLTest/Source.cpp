@@ -12,7 +12,7 @@
 #define WIDTH 1920
 #define HEIGHT 1080
 
-#define NUM_CHUNKS 16
+#define NUM_CHUNKS 8
 #define CHUNK_SIZE 16
 
 // location = 0 bc of attrib pointer
@@ -71,9 +71,7 @@ int main(int argc, char** argv) {
 	int trackerS = 0;
 	int trackerE = 0;
 	if (myfile.is_open()) {
-		while (getline(myfile, line)) {
-			//std::cout << line << '\n';
-			//std::cout << line << std::endl;
+		while (getline(myfile, line) && k < NUM_CHUNKS) {
 			for (j = 0; j < CHUNK_SIZE; j++) {
 				while (trackerS < line.length() && line[trackerS] == ' ') {
 					trackerS++;
@@ -83,7 +81,6 @@ int main(int argc, char** argv) {
 					trackerE++;
 				}
 				heights[k][i][j] = std::stof(line.substr(trackerS, trackerE - trackerS));
-				//std::cout << heights[k][i][j] << " " << trackerS << " " << trackerE << std::endl;
 				trackerS = trackerE;
 			}
 			trackerS = 0;
@@ -121,10 +118,6 @@ int main(int argc, char** argv) {
 	}
 
 	glEnable(GL_DEPTH_TEST);
-
-	// coordinates are between -1 and 1, center is 0 0
-	// this defines the new center as the center
-	//glViewport(0, 0, WIDTH, HEIGHT);
 
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
@@ -180,8 +173,8 @@ int main(int argc, char** argv) {
 
 	// vertex data loading -- posx, posy, posz, r, g, b
 	std::vector<GLfloat> vertices(CHUNK_SIZE* CHUNK_SIZE* NUM_CHUNKS * 3);
-	//GLfloat vertices[CHUNK_SIZE * CHUNK_SIZE * NUM_CHUNKS * 3];
-	std::vector<GLuint> elements((CHUNK_SIZE-1)*(CHUNK_SIZE-1)*NUM_CHUNKS*3*2);
+	std::vector<GLuint> elements((CHUNK_SIZE)*(CHUNK_SIZE-1)*NUM_CHUNKS*3*2);
+
 	for (k = 0; k < NUM_CHUNKS; k++) {
 		for (i = 0; i < CHUNK_SIZE; i++) {
 			for (j = 0; j < CHUNK_SIZE; j++) {
@@ -192,19 +185,29 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
+
 	int l = 0;
 	for (k = 0; k < NUM_CHUNKS; k++) {
-		for (i = 0; i < CHUNK_SIZE-1; i++) {
-			for (j = 0; j < CHUNK_SIZE-1; j++) {
-				int index = k * (CHUNK_SIZE-1) * (CHUNK_SIZE-1) + i * (CHUNK_SIZE-1) + j;
+		for (j = 0; j < CHUNK_SIZE - 1; j++) {
+			for (i = 0; i < CHUNK_SIZE-1; i++) {
 				int vertIndex = k * CHUNK_SIZE * CHUNK_SIZE + i * CHUNK_SIZE + j;
 				
 				elements[l++] = vertIndex;
 				elements[l++] = vertIndex + CHUNK_SIZE;
 				elements[l++] = vertIndex + CHUNK_SIZE+1;
 				elements[l++] = vertIndex;
-				elements[l++] = vertIndex + 1;
 				elements[l++] = vertIndex + CHUNK_SIZE+1;
+				elements[l++] = vertIndex + 1;
+			}
+			if (k < NUM_CHUNKS - 1) {
+				int vertIndex = k * CHUNK_SIZE * CHUNK_SIZE + i * CHUNK_SIZE + j;
+
+				elements[l++] = vertIndex;
+				elements[l++] = vertIndex + CHUNK_SIZE;
+				elements[l++] = vertIndex + CHUNK_SIZE + 1;
+				elements[l++] = vertIndex;
+				elements[l++] = vertIndex + CHUNK_SIZE + 1;
+				elements[l++] = vertIndex + 1;
 			}
 		}
 	}
@@ -360,7 +363,11 @@ int main(int argc, char** argv) {
 }
 
 void processInput(GLFWwindow* window) {
-	const float cameraSpeed = 25.0f * deltaTime;
+	float cameraSpeed = 25.0f * deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+		cameraSpeed = 50.0f * deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE)
+		cameraSpeed = 25.0f * deltaTime;
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -379,6 +386,7 @@ void processInput(GLFWwindow* window) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
@@ -412,4 +420,5 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	direction.y = sin(glm::radians(pitch));
 	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 	cameraFront = glm::normalize(direction);
+
 }
