@@ -12,4 +12,5 @@ private:
 public:;
     static int** generateChunkHeightMap(int chunkZ, int chunkX);
     static int*** generateChunkData(int chunkZ, int chunkX);
+    static void deallocateChunk(int*** chunk);
 };

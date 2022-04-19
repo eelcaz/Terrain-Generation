@@ -65,3 +65,12 @@ int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
     return chunk;
 };
 
+void Terrain::deallocateChunk(int*** chunk) {
+    for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+        for (int z = 0; z < CHUNK_WIDTH; ++z) {
+            delete[] chunk[y][z];
+        }
+        delete[] chunk[y];
+    }
+    delete[] chunk;
+}
