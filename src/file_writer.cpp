@@ -89,25 +89,25 @@ void plainTextWrite3DChunk(std::string filename, int*** chunk, int chunkWidth, i
     fp.close();
 }
 
-int main(int argc, char *argv[]) {
-    int numChunks = 16;
-    auto chunkList = new int **[numChunks];
-    for (int i = 0; i < numChunks; ++i) {
-        chunkList[i] = Terrain::generateChunkHeightMap(i-numChunks/2, 0);
-    }
-    imageWriteChunk("chunk.ppm", chunkList[0]);
-    imageWriteChunkList("chunks.ppm", chunkList, numChunks);
-    plainTextWriteChunk("chunk.txt", chunkList[0]);
-    plainTextWriteChunkList("chunks.txt", chunkList, numChunks);
-    // deallocate
-    for (int i = 0; i < numChunks; ++i) {
-        delete[] chunkList[i];
-    }
-    delete[] chunkList;
+// int main(int argc, char *argv[]) {
+//     int numChunks = 16;
+//     auto chunkList = new int **[numChunks];
+//     for (int i = 0; i < numChunks; ++i) {
+//         chunkList[i] = Terrain::generateChunkHeightMap(i-numChunks/2, 0);
+//     }
+//     imageWriteChunk("chunk.ppm", chunkList[0]);
+//     imageWriteChunkList("chunks.ppm", chunkList, numChunks);
+//     plainTextWriteChunk("chunk.txt", chunkList[0]);
+//     plainTextWriteChunkList("chunks.txt", chunkList, numChunks);
+//     // deallocate
+//     for (int i = 0; i < numChunks; ++i) {
+//         delete[] chunkList[i];
+//     }
+//     delete[] chunkList;
 
-    // create 3D chunk data
-    auto chunk3D = Terrain::generateChunkData(0, 0);
-    plainTextWrite3DChunk("chunk3D.txt", chunk3D, 16, 256);
-    Terrain::deallocateChunk(chunk3D);
-    return 0;
-}
+//     // create 3D chunk data
+//     auto chunk3D = Terrain::generateChunkData(0, 0);
+//     plainTextWrite3DChunk("chunk3D.txt", chunk3D, 16, 256);
+//     Terrain::deallocateChunk(chunk3D);
+//     return 0;
+// }

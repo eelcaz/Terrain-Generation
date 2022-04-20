@@ -73,3 +73,20 @@ double PerlinNoise::noise(double z, double x) {
 //         std::cout << "\n";
 //     }
 // }
+
+// int main(int argc, char *argv[]) {
+//     int chunkWidth = 16;
+//     int terrainZoom = 16;
+//     int chunkZ = 0;
+//     int chunkX = 0;
+//     double offset = (double)1/(2*chunkWidth);
+//     for (int z = 0; z < chunkWidth; ++z) {
+//         for (int x = 0; x < chunkWidth; ++x) {
+//             double noiseZ = (chunkZ + offset + (double)z/chunkWidth)/terrainZoom;
+//             double noiseX = (chunkX + offset + (double)x/chunkWidth)/terrainZoom;
+//             double val = PerlinNoise::noise(noiseZ, noiseX);
+//             std::cout << std::left << std::setw(12) << val << " ";
+//         }
+//         std::cout << "\n";
+//     }
+// }
