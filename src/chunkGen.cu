@@ -40,19 +40,23 @@ __device__ double dotProduct(int GridZ, int GridX, double pz, double px) {
 
 __global__ void chunkHeightMapKernel(int chunkZ, int chunkX, double *chunk) {
     double offset = (double)1/(2*CHUNK_WIDTH);
-    int z = threadIdx.x / CHUNK_WIDTH;
-    int x = threadIdx.x % CHUNK_WIDTH;
-    double noiseZ = (chunkZ + offset + (double)z/CHUNK_WIDTH)/TERRAIN_ZOOM;
-    double noiseX = (chunkX + offset + (double)x/CHUNK_WIDTH)/TERRAIN_ZOOM;
+    int _z = threadIdx.x / CHUNK_WIDTH;
+    int _x = threadIdx.x % CHUNK_WIDTH;
+    double z = (chunkZ + offset + (double)_z/CHUNK_WIDTH)/TERRAIN_ZOOM;
+    double x = (chunkX + offset + (double)_x/CHUNK_WIDTH)/TERRAIN_ZOOM;
+    double noiseZ, noiseX;
 
     // fbm iterations
+    int octaves = 6;
     double total = 0.0;
     double maxVal = 0;
     for (int i = 0; i < octaves; ++i) {
         float amplitude = pow(0.58f, i);
         float frequency = pow(2.0f, i);
 
-    
+        noiseZ = z * frequency;
+        noiseX = x * frequency;
+
         // noise calculations
         int zGrid0 = (int)floor(noiseZ);
         int xGrid0 = (int)floor(noiseX);
@@ -80,10 +84,11 @@ __global__ void chunkHeightMapKernel(int chunkZ, int chunkX, double *chunk) {
     // apply terrain calcs
     total = (total + 1)/2;
     total = (int)floor(total * TERRAIN_AMPLITUDE);
-    chunk[threadIdx.x] = noiseVal;
+    chunk[threadIdx.x] = total;
     // chunk[threadIdx.x] = CHUNK_WIDTH;
     return;
 };
+
 
 int main(int argc, char *argv[]) {
     double* d_chunk;
