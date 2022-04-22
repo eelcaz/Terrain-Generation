@@ -13,7 +13,7 @@ private:
     // static const int TERRAIN_AMPLITUDE = 200;
     // /* good zoom values seem to be 256/CHUNK_WIDTH */
     // static const int TERRAIN_ZOOM = 16;
-public:;
+public:
     static int** generateChunkHeightMap(int chunkZ, int chunkX);
     static int*** generateChunkData(int chunkZ, int chunkX);
     static void deallocateChunk(int*** chunk);
