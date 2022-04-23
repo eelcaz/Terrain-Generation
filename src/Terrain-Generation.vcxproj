@@ -54,6 +54,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.6.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -91,12 +92,12 @@
       <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(solutionDir)Dependencies\GLEW\include;$(solutionDir)Dependencies\GLFW\include;$(solutionDir)Dependencies\glm;$(solutionDir)GLTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(solutionDir)Dependencies\GLEW\include;$(solutionDir)Dependencies\GLFW\include;$(solutionDir)Dependencies\glm;$(solutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>E:\Library\projects\Terrain-Generation\GLTest\Dependencies\glew-2.1.0\lib\Release\Win32;E:\Library\projects\Terrain-Generation\GLTest\Dependencies\GLFW\lib-vc2019;C:\Users\zackl\source\repos\GLTest\Dependencies\GLFW\lib-vc2019;C:\Users\zackl\source\repos\GLTest\Dependencies\GLEW\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(solutionDir)Dependencies\GLFW\lib-vc2019;$(solutionDir)Dependencies\GLEW\lib\Release\Win32;$(solutionDir)\Dependencies\glew-2.1.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -160,5 +161,6 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.6.targets" />
   </ImportGroup>
 </Project>
