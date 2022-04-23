@@ -8,6 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
+#include <terrain_generator.h>
 
 #define WIDTH 1920
 #define HEIGHT 1080
@@ -61,6 +62,24 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 int main(int argc, char** argv) {
+
+	// test renderer can compile/run with terrain gen code
+	auto chunk = Terrain::generateChunkHeightMap(0, 0);
+
+	for (size_t z = 0; z < CHUNK_WIDTH; ++z) {
+		for (size_t x = 0; x < CHUNK_WIDTH; ++x) {
+			std::cout << chunk[z][x] << " ";
+		}
+		std::cout << "\n";
+	}
+	std::cout << std::endl;
+
+	// deallocate
+	for (int i = 0; i < CHUNK_WIDTH; ++i) {
+		delete[] chunk[i];
+	}
+	delete[] chunk;
+
 
 	std::string line;
 	std::ifstream myfile("../message.txt");

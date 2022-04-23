@@ -91,7 +91,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>$(solutionDir)Dependencies\GLEW\include;$(solutionDir)Dependencies\GLFW\include;$(solutionDir)Dependencies\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(solutionDir)Dependencies\GLEW\include;$(solutionDir)Dependencies\GLFW\include;$(solutionDir)Dependencies\glm;$(solutionDir)GLTest;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -149,7 +149,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="file_writer.cpp" />
+    <ClCompile Include="perlin_noise.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="terrain_generator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="perlin_noise.h" />
+    <ClInclude Include="terrain_generator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
