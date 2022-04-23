@@ -65,12 +65,27 @@ int main(int argc, char** argv) {
     int i = 0;
     int j = 0;
     int k = 0;
-    auto heights = new int **[NUM_CHUNKS];
 
-    // generate NUM_CHUNKS heightmaps
+    // // generate NUM_CHUNKS heightmaps
+    // auto heights = new int **[NUM_CHUNKS];
+    // for (int i = 0; i < NUM_CHUNKS; ++i) {
+    //     heights[i] = Terrain::generateChunkHeightMap(i-NUM_CHUNKS/2, 0);
+    // }
+
+    // call kernel
+    // auto chunk = chunkHeightMapKernel(0, 0);
+    // for (int z = 0; z < CHUNK_SIZE; ++z) {
+    //     for (int x = 0; x < CHUNK_SIZE; ++x) {
+    //         std::cout << chunk[z*CHUNK_SIZE + x] << " ";
+    //     }
+    //     std::cout << "\n";
+    // }
+    // delete[] chunk;
+    auto heights = new int *[NUM_CHUNKS];
     for (int i = 0; i < NUM_CHUNKS; ++i) {
-        heights[i] = Terrain::generateChunkHeightMap(i-NUM_CHUNKS/2, 0);
+        heights[i] = Terrain::generateChunkHeightMapGpu(i-NUM_CHUNKS/2, 0);
     }
+
 
     glfwInit();
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -157,7 +172,7 @@ int main(int argc, char** argv) {
                 int cur = k * CHUNK_SIZE * CHUNK_SIZE * 3 + i * CHUNK_SIZE * 3 + j * 3;
                 vertices[cur + 0] = i - CHUNK_SIZE / 2.0f + k * CHUNK_SIZE;
                 vertices[cur + 2] = -j;
-                vertices[cur + 1] = heights[k][i][j];
+                vertices[cur + 1] = heights[k][i*CHUNK_SIZE + j];
             }
         }
     }
