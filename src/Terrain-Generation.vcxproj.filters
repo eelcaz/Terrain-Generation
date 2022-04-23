@@ -35,5 +35,13 @@
     <ClInclude Include="terrain_generator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="heightMapGen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="heightMapGen.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

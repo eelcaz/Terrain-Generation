@@ -156,8 +156,12 @@
     <ClCompile Include="terrain_generator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="heightMapGen.h" />
     <ClInclude Include="perlin_noise.h" />
     <ClInclude Include="terrain_generator.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="heightMapGen.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
