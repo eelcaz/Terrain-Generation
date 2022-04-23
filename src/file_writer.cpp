@@ -9,11 +9,11 @@ void imageWriteChunk(std::string filename, int** chunk) {
     std::ofstream fp;
     fp.open(filename);
 
-    fp << "P6\n";
-    fp << CHUNK_WIDTH << " " << CHUNK_WIDTH << "\n" << 200 << "\n";
+    fp << "P6\n" << Terrain::CHUNK_WIDTH << " ";
+    fp << Terrain::CHUNK_WIDTH << "\n" << 200 << "\n";
 
-    for (int z = 0; z < CHUNK_WIDTH; ++z) {
-        for (int x = 0; x < CHUNK_WIDTH; ++x) {
+    for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
+        for (int x = 0; x < Terrain::CHUNK_WIDTH; ++x) {
             unsigned char uc;
             uc = chunk[z][x];
             fp << uc << uc << uc;
@@ -27,11 +27,12 @@ void imageWriteChunkList(std::string filename, int*** chunkList, int len) {
     std::ofstream fp;
     fp.open(filename);
 
-    fp << "P6\n";
-    fp << CHUNK_WIDTH << " " << CHUNK_WIDTH*len << "\n" << 200 << "\n";
+    fp << "P6\n" << Terrain::CHUNK_WIDTH << " ";
+    fp << Terrain::CHUNK_WIDTH*len << "\n" << 200 << "\n";
+
     for (int i = 0; i < len; ++i) {
-        for (int z = 0; z < CHUNK_WIDTH; ++z) {
-            for (int x = 0; x < CHUNK_WIDTH; ++x) {
+        for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
+            for (int x = 0; x < Terrain::CHUNK_WIDTH; ++x) {
                 unsigned char uc = (unsigned char)chunkList[i][z][x];
                 fp << uc << uc << uc;
             }
@@ -45,11 +46,11 @@ void plainTextWriteChunk(std::string filename, int** chunk) {
     std::ofstream fp;
     fp.open(filename);
 
-    for (int z = 0; z < CHUNK_WIDTH; ++z) {
-        for (int x = 0; x < CHUNK_WIDTH; ++x) {
+    for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
+        for (int x = 0; x < Terrain::CHUNK_WIDTH; ++x) {
             fp << (int)floor(chunk[z][x]) << " ";
         }
-        if (z != CHUNK_WIDTH - 1) {
+        if (z != Terrain::CHUNK_WIDTH - 1) {
             fp << std::endl;
         }
     }
@@ -61,11 +62,11 @@ void plainTextWriteChunkList(std::string filename, int*** chunkList, int len) {
     std::ofstream fp;
     fp.open(filename);
     for (int i = 0; i < len; ++i) {
-        for (int z = 0; z < CHUNK_WIDTH; ++z) {
-            for (int x = 0; x < CHUNK_WIDTH; ++x) {
+        for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
+            for (int x = 0; x < Terrain::CHUNK_WIDTH; ++x) {
                 fp << (int)floor(chunkList[i][z][x]) << " ";
             }
-            if (z != CHUNK_WIDTH - 1 || i != len - 1) {
+            if (z != Terrain::CHUNK_WIDTH - 1 || i != len - 1) {
                 fp << std::endl;
             }
         }
