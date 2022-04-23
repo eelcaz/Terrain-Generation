@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "terrain_generator.h"
+#include "heightMapGen.h"
 #include "perlin_noise.h"
 
 double Terrain::fbmNoise(double z, double x, int octaves) {
@@ -40,6 +41,10 @@ int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
     }
 
     return heightMap;
+};
+
+int* Terrain::generateChunkHeightMapGpu(int chunkZ, int chunkX) {
+    return chunkHeightMapKernel(chunkZ, chunkX);
 };
 
 int*** Terrain::generateChunkData(int chunkZ, int chunkX) {

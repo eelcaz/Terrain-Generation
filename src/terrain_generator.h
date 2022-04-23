@@ -11,6 +11,7 @@ public:
     static const int TERRAIN_AMPLITUDE = 200;
 
     static int** generateChunkHeightMap(int chunkZ, int chunkX);
+    static int* generateChunkHeightMapGpu(int chunkZ, int chunkX);
     static int*** generateChunkData(int chunkZ, int chunkX);
-    static void deallocateChunk(int*** chunk);
+    static void deallocateChunk(int ***chunk);
 };

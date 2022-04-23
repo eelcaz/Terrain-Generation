@@ -38,12 +38,12 @@ __device__ double dotProduct(int GridZ, int GridX, double pz, double px) {
     return gradZ * offsetZ + gradX * offsetX;
 };
 
-__global__ void chunkHeightMapKernel(int chunkZ, int chunkX, double *chunk) {
-    double offset = (double)1/(2*CHUNK_WIDTH);
-    int _z = threadIdx.x / CHUNK_WIDTH;
-    int _x = threadIdx.x % CHUNK_WIDTH;
-    double z = (chunkZ + offset + (double)_z/CHUNK_WIDTH)/TERRAIN_ZOOM;
-    double x = (chunkX + offset + (double)_x/CHUNK_WIDTH)/TERRAIN_ZOOM;
+__global__ void chunkHeightMapKernel(int chunkZ, int chunkX, int *chunk) {
+    double offset = (double)1/(2*Terrain::CHUNK_WIDTH);
+    int _z = threadIdx.x / Terrain::CHUNK_WIDTH;
+    int _x = threadIdx.x % Terrain::CHUNK_WIDTH;
+    double z = (chunkZ + offset + (double)_z/Terrain::CHUNK_WIDTH)/Terrain::TERRAIN_ZOOM;
+    double x = (chunkX + offset + (double)_x/Terrain::CHUNK_WIDTH)/Terrain::TERRAIN_ZOOM;
     double noiseZ, noiseX;
 
     // fbm iterations
@@ -83,33 +83,46 @@ __global__ void chunkHeightMapKernel(int chunkZ, int chunkX, double *chunk) {
     total = total/maxVal;
     // apply terrain calcs
     total = (total + 1)/2;
-    total = (int)floor(total * TERRAIN_AMPLITUDE);
+    total = (int)floor(total * Terrain::TERRAIN_AMPLITUDE);
     chunk[threadIdx.x] = total;
-    // chunk[threadIdx.x] = CHUNK_WIDTH;
     return;
 };
 
-
-int main(int argc, char *argv[]) {
-    double* d_chunk;
-    size_t chunkSize = sizeof(double) * CHUNK_WIDTH * CHUNK_WIDTH;
-    double* chunk = new double[CHUNK_WIDTH*CHUNK_WIDTH];
+int* chunkHeightMapKernel(int chunkZ, int chunkX) {
+    int* d_chunk;
+    size_t chunkSize = sizeof(int)*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
+    int* chunk = new int[Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH];
     cudaMalloc(&d_chunk, chunkSize);
-    int block_width = CHUNK_WIDTH*CHUNK_WIDTH;
+    int block_width = Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
     dim3 dimBlock(block_width, 1, 1);
     dim3 dimGrid(1, 1, 1);
     cudaMemcpyToSymbol("PERMUTATION", &PERMUTATION, sizeof(PERMUTATION));
-    chunkHeightMapKernel<<<dimGrid, dimBlock>>>(0, 0, d_chunk);
+    chunkHeightMapKernel<<<dimGrid, dimBlock>>>(chunkZ, chunkX, d_chunk);
     cudaMemcpy(chunk, d_chunk, chunkSize, cudaMemcpyDeviceToHost);
-
-    for (int z = 0; z < CHUNK_WIDTH; ++z) {
-        for (int x = 0; x < CHUNK_WIDTH; ++x) {
-            std::cout << std::left << std::setw(12)
-                      << chunk[z*CHUNK_WIDTH + x] << " ";
-        }
-        std::cout << "\n";
-    }
-    std::cout << std::endl;
-    delete[] chunk;
-    return 0;
+    return chunk;
 }
+
+
+// int main(int argc, char *argv[]) {
+//     int* d_chunk;
+//     size_t chunkSize = sizeof(int) * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH;
+//     chunk* chunk = new int[Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH];
+//     cudaMalloc(&d_chunk, chunkSize);
+//     int block_width = Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
+//     dim3 dimBlock(block_width, 1, 1);
+//     dim3 dimGrid(1, 1, 1);
+//     cudaMemcpyToSymbol("PERMUTATION", &PERMUTATION, sizeof(PERMUTATION));
+//     chunkHeightMapKernel<<<dimGrid, dimBlock>>>(0, 0, d_chunk);
+//     cudaMemcpy(chunk, d_chunk, chunkSize, cudaMemcpyDeviceToHost);
+
+//     for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
+//         for (int x = 0; x < Terrain::CHUNK_WIDTH; ++x) {
+//             std::cout << std::left << std::setw(12)
+//                       << chunk[z*Terrain::CHUNK_WIDTH + x] << " ";
+//         }
+//         std::cout << "\n";
+//     }
+//     std::cout << std::endl;
+//     delete[] chunk;
+//     return 0;
+// }
