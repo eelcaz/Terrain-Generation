@@ -62,58 +62,15 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 int main(int argc, char** argv) {
-
-	// test renderer can compile/run with terrain gen code
-	auto chunk = Terrain::generateChunkHeightMap(0, 0);
-
-	for (size_t z = 0; z < CHUNK_WIDTH; ++z) {
-		for (size_t x = 0; x < CHUNK_WIDTH; ++x) {
-			std::cout << chunk[z][x] << " ";
-		}
-		std::cout << "\n";
-	}
-	std::cout << std::endl;
-
-	// deallocate
-	for (int i = 0; i < CHUNK_WIDTH; ++i) {
-		delete[] chunk[i];
-	}
-	delete[] chunk;
-
-
-	std::string line;
-	std::ifstream myfile("../message.txt");
-	float heights[NUM_CHUNKS][CHUNK_SIZE][CHUNK_SIZE];
-	int i = 0;
+    int i = 0;
 	int j = 0;
 	int k = 0;
-	int trackerS = 0;
-	int trackerE = 0;
-	if (myfile.is_open()) {
-		while (getline(myfile, line) && k < NUM_CHUNKS) {
-			for (j = 0; j < CHUNK_SIZE; j++) {
-				while (trackerS < line.length() && line[trackerS] == ' ') {
-					trackerS++;
-				}
-				trackerE = trackerS;
-				while (trackerE < line.length() && line[trackerE] != ' ') {
-					trackerE++;
-				}
-				heights[k][i][j] = std::stof(line.substr(trackerS, trackerE - trackerS));
-				trackerS = trackerE;
-			}
-			trackerS = 0;
-			trackerE = 0;
+	auto heights = new int **[NUM_CHUNKS];
 
-			i++;
-			if (i == CHUNK_SIZE) {
-				i = 0;
-				k++;
-			}
-		}
-		myfile.close();
+    // generate NUM_CHUNKS heightmaps
+    for (int i = 0; i < NUM_CHUNKS; ++i) {
+	    heights[i] = Terrain::generateChunkHeightMap(i-NUM_CHUNKS/2, 0);
 	}
-	else std::cout << "Unable to open file";
 
 	glfwInit();
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
