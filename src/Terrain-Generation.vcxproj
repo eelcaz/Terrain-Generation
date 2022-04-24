@@ -152,12 +152,14 @@
   <ItemGroup>
     <ClCompile Include="file_writer.cpp" />
     <ClCompile Include="perlin_noise.cpp" />
+    <ClCompile Include="perlin_noise_3d.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="terrain_generator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="heightMapGen.h" />
     <ClInclude Include="perlin_noise.h" />
+    <ClInclude Include="perlin_noise_3d.h" />
     <ClInclude Include="terrain_generator.h" />
   </ItemGroup>
   <ItemGroup>
