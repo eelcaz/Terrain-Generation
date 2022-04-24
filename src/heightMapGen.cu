@@ -28,7 +28,7 @@ __device__ double interpolate(double a, double b, double weight) {
 
 __device__ double dotProduct(int GridZ, int GridX, double pz, double px) {
     // get the random vector on the gridPoint
-    int randDir = PERMUTATION[(PERMUTATION[GridZ] + GridX) % 256];
+    int randDir = PERMUTATION[(PERMUTATION[abs(GridZ) % 256] + abs(GridX)) % 256];
     double gradZ = cos((double)randDir);
     double gradX = sin((double)randDir);
     // get the offset vector from the grid point to the target point

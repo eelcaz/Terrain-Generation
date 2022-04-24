@@ -12,7 +12,7 @@ double PerlinNoise::interpolate(double a, double b, double weight) {
 };
 
 Vector2 PerlinNoise::randomGradient(int z, int x) {
-    int randDir = PERMUTATION[(PERMUTATION[z] + x) % 256];
+    int randDir = PERMUTATION[(PERMUTATION[abs(z) % 256] + abs(x)) % 256];
     Vector2 v = {
         (float)cos(randDir),    // z
         (float)sin(randDir)     // x
