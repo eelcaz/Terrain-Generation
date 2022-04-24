@@ -42,6 +42,26 @@ void imageWriteChunkList(std::string filename, int*** chunkList, int len) {
     fp.close();
 };
 
+void imageWrite3DChunk(std::string filename, int*** chunk) {
+    std::ofstream fp;
+    fp.open(filename);
+
+    fp << "P6\n" << Terrain::CHUNK_WIDTH << " ";
+    fp << Terrain::CHUNK_WIDTH*Terrain::CHUNK_HEIGHT;
+    fp << "\n" << 1 << "\n";
+
+    for (int y = 0; y < Terrain::CHUNK_HEIGHT; ++y) {
+        for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
+            for (int x = 0; x < Terrain::CHUNK_WIDTH; ++x) {
+                unsigned char uc = (unsigned char)chunk[y][z][x];
+                fp << uc << uc << uc;
+            }
+        }
+    }
+    fp << std::endl;
+    fp.close();
+};
+
 void plainTextWriteChunk(std::string filename, int** chunk) {
     std::ofstream fp;
     fp.open(filename);
@@ -109,6 +129,7 @@ void plainTextWrite3DChunk(std::string filename, int*** chunk, int chunkWidth, i
 //     // create 3D chunk data
 //     auto chunk3D = Terrain::generateChunkData(0, 0);
 //     plainTextWrite3DChunk("chunk3D.txt", chunk3D, 16, 256);
+//     imageWrite3DChunk("chunk3D.ppm", chunk3D);
 //     Terrain::deallocateChunk(chunk3D);
 //     return 0;
 // }
