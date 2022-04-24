@@ -14,7 +14,6 @@
 #define HEIGHT 1080
 
 #define NUM_CHUNKS 8
-#define CHUNK_SIZE 16
 
 // location = 0 bc of attrib pointer
 const GLchar* vertexShaderSource = R"glsl(
@@ -74,9 +73,9 @@ int main(int argc, char** argv) {
 
     // call kernel
     // auto chunk = chunkHeightMapKernel(0, 0);
-    // for (int z = 0; z < CHUNK_SIZE; ++z) {
-    //     for (int x = 0; x < CHUNK_SIZE; ++x) {
-    //         std::cout << chunk[z*CHUNK_SIZE + x] << " ";
+    // for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
+    //     for (int x = 0; x < Terrain::CHUNK_WIDTH; ++x) {
+    //         std::cout << chunk[z*Terrain::CHUNK_WIDTH + x] << " ";
     //     }
     //     std::cout << "\n";
     // }
@@ -163,41 +162,41 @@ int main(int argc, char** argv) {
 
 
     // vertex data loading -- posx, posy, posz, r, g, b
-    std::vector<GLfloat> vertices(CHUNK_SIZE* CHUNK_SIZE* NUM_CHUNKS * 3);
-    std::vector<GLuint> elements((CHUNK_SIZE)*(CHUNK_SIZE-1)*NUM_CHUNKS*3*2);
+    std::vector<GLfloat> vertices(Terrain::CHUNK_WIDTH* Terrain::CHUNK_WIDTH* NUM_CHUNKS * 3);
+    std::vector<GLuint> elements((Terrain::CHUNK_WIDTH)*(Terrain::CHUNK_WIDTH-1)*NUM_CHUNKS*3*2);
 
     for (k = 0; k < NUM_CHUNKS; k++) {
-        for (i = 0; i < CHUNK_SIZE; i++) {
-            for (j = 0; j < CHUNK_SIZE; j++) {
-                int cur = k * CHUNK_SIZE * CHUNK_SIZE * 3 + i * CHUNK_SIZE * 3 + j * 3;
-                vertices[cur + 0] = i - CHUNK_SIZE / 2.0f + k * CHUNK_SIZE;
+        for (i = 0; i < Terrain::CHUNK_WIDTH; i++) {
+            for (j = 0; j < Terrain::CHUNK_WIDTH; j++) {
+                int cur = k * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH * 3 + i * Terrain::CHUNK_WIDTH * 3 + j * 3;
+                vertices[cur + 0] = i - Terrain::CHUNK_WIDTH / 2.0f + k * Terrain::CHUNK_WIDTH;
                 vertices[cur + 2] = -j;
-                vertices[cur + 1] = heights[k][i*CHUNK_SIZE + j];
+                vertices[cur + 1] = heights[k][i*Terrain::CHUNK_WIDTH + j];
             }
         }
     }
 
     int l = 0;
     for (k = 0; k < NUM_CHUNKS; k++) {
-        for (j = 0; j < CHUNK_SIZE - 1; j++) {
-            for (i = 0; i < CHUNK_SIZE-1; i++) {
-                int vertIndex = k * CHUNK_SIZE * CHUNK_SIZE + i * CHUNK_SIZE + j;
+        for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
+            for (i = 0; i < Terrain::CHUNK_WIDTH-1; i++) {
+                int vertIndex = k * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH + i * Terrain::CHUNK_WIDTH + j;
 
                 elements[l++] = vertIndex;
-                elements[l++] = vertIndex + CHUNK_SIZE;
-                elements[l++] = vertIndex + CHUNK_SIZE+1;
+                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH;
+                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH+1;
                 elements[l++] = vertIndex;
-                elements[l++] = vertIndex + CHUNK_SIZE+1;
+                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH+1;
                 elements[l++] = vertIndex + 1;
             }
             if (k < NUM_CHUNKS - 1) {
-                int vertIndex = k * CHUNK_SIZE * CHUNK_SIZE + i * CHUNK_SIZE + j;
+                int vertIndex = k * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH + i * Terrain::CHUNK_WIDTH + j;
 
                 elements[l++] = vertIndex;
-                elements[l++] = vertIndex + CHUNK_SIZE;
-                elements[l++] = vertIndex + CHUNK_SIZE + 1;
+                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH;
+                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH + 1;
                 elements[l++] = vertIndex;
-                elements[l++] = vertIndex + CHUNK_SIZE + 1;
+                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH + 1;
                 elements[l++] = vertIndex + 1;
             }
         }
