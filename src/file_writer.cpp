@@ -47,10 +47,10 @@ void imageWrite3DChunk(std::string filename, int*** chunk) {
     fp.open(filename);
 
     fp << "P6\n" << Terrain::CHUNK_WIDTH << " ";
-    fp << Terrain::CHUNK_WIDTH*Terrain::CHUNK_HEIGHT;
-    fp << "\n" << 1 << "\n";
+    fp << Terrain::CHUNK_WIDTH*10;
+    fp << "\n" << 200 << "\n";
 
-    for (int y = 0; y < Terrain::CHUNK_HEIGHT; ++y) {
+    for (int y = 0; y < 30; y += 2) {
         for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
             for (int x = 0; x < Terrain::CHUNK_WIDTH; ++x) {
                 unsigned char uc = (unsigned char)chunk[y][z][x];
