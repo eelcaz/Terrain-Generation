@@ -11,7 +11,7 @@ PerlinNoise3D::PerlinNoise3D(unsigned int seed) {
     std::mt19937 generator(seed);
     std::uniform_real_distribution<> distribution;
     auto dice = std::bind(distribution, generator);
-    for (unsigned i = 0; i < 256; ++i) {
+    for (unsigned i = 0; i < tableSize; ++i) {
         float theta = acos(2 * dice() - 1);
         float phi = 2 * dice() * M_PI;
 
@@ -19,7 +19,6 @@ PerlinNoise3D::PerlinNoise3D(unsigned int seed) {
         double y = sin(phi) * sin(theta);
         double z = cos(theta);
         gradients[i] = {y, z, x};
-        permutationTable[i] = i;
     }
 }
 
@@ -30,7 +29,7 @@ double PerlinNoise3D::interpolate(double a, double b, double weight) {
 };
 
 Vector3 PerlinNoise3D::randomGradient(int y, int z, int x) {
-    int randInd = permutationTable[(permutationTable[(permutationTable[abs(y) % 256] + abs(z)) % 256] + abs(x)) % 256];
+    int randInd = PERMUTATION[(PERMUTATION[(PERMUTATION[abs(y) % 256] + abs(z)) % 256] + abs(x)) % 256];
     // test that these values are within range of gradients' length
     return gradients[randInd];
 };
@@ -82,6 +81,6 @@ double PerlinNoise3D::noise(double y, double z, double x) {
 
     interp5 = interpolate(interp1, interp2, wz);
     interp6 = interpolate(interp3, interp4, wz);
-    
+
     return interpolate(interp5, interp6, wx);
 }

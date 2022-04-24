@@ -58,30 +58,31 @@ int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
         }
     }
 
-    // auto heightMap = generateChunkHeightMap(chunkZ, chunkX);
-    // // solid parts of chunk will have value of 1, otherwise 0
-    // for (int z = 0; z < CHUNK_WIDTH; ++z) {
-    //     for (int x = 0; x < CHUNK_WIDTH; ++x) {
-    //         for (int y = 0; y < heightMap[z][x]; ++y) {
-    //             chunk[y][z][x] = 1;
-    //         }
-    //     }
-    // }
-    PerlinNoise3D noise3D(2016);
-    for (int y = 0; y < CHUNK_HEIGHT; ++y) {
-        for (int z = 0; z < CHUNK_WIDTH; ++z) {
-            for (int x = 0; x < CHUNK_WIDTH; ++x) {
-                double offset = (double)1/(2*CHUNK_WIDTH);
-                // double fy = ((int)y*CHUNK_WIDTH + offset + (double)(y%CHUNK_WIDTH)/CHUNK_WIDTH);
-                double fy = 0;
-                double fz = (chunkZ + offset + (double)z/CHUNK_WIDTH);
-                double fx = (chunkX + offset + (double)x/CHUNK_WIDTH);
-                double val = noise3D.noise(fy*6, fz*6, fx*6);
-                chunk[y][z][x] = (int)floor(((val + 1)/2) * 200);
-                // std::cout << chunk[y][z][x]  << " \n";
+    auto heightMap = generateChunkHeightMap(chunkZ, chunkX);
+    // solid parts of chunk will have value of 1, otherwise 0
+    for (int z = 0; z < CHUNK_WIDTH; ++z) {
+        for (int x = 0; x < CHUNK_WIDTH; ++x) {
+            for (int y = 0; y < heightMap[z][x]; ++y) {
+                chunk[y][z][x] = 1;
             }
         }
     }
+
+    // this is here just to test that the 3D perlin noise works
+    // PerlinNoise3D noise3D(999);
+    // for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+    //     for (int z = 0; z < CHUNK_WIDTH; ++z) {
+    //         for (int x = 0; x < CHUNK_WIDTH; ++x) {
+    //             double offset = (double)1/(2*CHUNK_WIDTH);
+    //             double fy = ((int)y/CHUNK_WIDTH) + offset + ((double)(y%CHUNK_WIDTH))/CHUNK_WIDTH;
+    //             double fz = (chunkZ + offset + (double)z/CHUNK_WIDTH);
+    //             double fx = (chunkX + offset + (double)x/CHUNK_WIDTH);
+    //             double val = noise3D.noise(fy*2, fz*2, fx*2);
+    //             chunk[y][z][x] = (int)floor(((val + 1)/2) * 200);
+    //             // std::cout << chunk[y][z][x]  << " \n";
+    //         }
+    //     }
+    // }
     return chunk;
 };
 
