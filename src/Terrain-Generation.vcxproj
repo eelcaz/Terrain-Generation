@@ -42,7 +42,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -54,7 +54,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.6.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.2.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -79,8 +79,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Library\projects\Terrain-Generation\GLTest\Dependencies\GLEW\include;E:\Library\projects\Terrain-Generation\GLTest\Dependencies\GLFW\include;E:\Library\projects\Terrain-Generation\GLTest\Dependencies\glm;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\Library\projects\Terrain-Generation\GLTest\Dependencies\glm;E:\Library\projects\Terrain-Generation\GLTest\Dependencies\GLFW\lib-vc2019;E:\Library\projects\Terrain-Generation\GLTest\Dependencies\GLEW\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.2\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.2\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -100,6 +100,10 @@
       <AdditionalLibraryDirectories>$(solutionDir)Dependencies\GLFW\lib-vc2019;$(solutionDir)Dependencies\GLEW\lib\Release\Win32;$(solutionDir)\Dependencies\glew-2.1.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
+      <TargetMachinePlatform>32</TargetMachinePlatform>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -122,16 +126,20 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\zackl\source\repos\GLTest\Dependencies\GLEW\include;C:\Users\zackl\source\repos\GLTest\Dependencies\GLFW\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(solutionDir)Dependencies\GLEW\include;C:\Users\zackl\Desktop\Stevens\22S\parallel\Terrain-Generation\Dependencies\GLFW-64\include;$(solutionDir)Dependencies\glm;$(solutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>E:\Library\projects\Terrain-Generation\GLTest\Dependencies\GLFW\lib-vc2019;E:\Library\projects\Terrain-Generation\GLTest\Dependencies\GLEW\lib\Release\Win32;C:\Users\zackl\source\repos\GLTest\Dependencies\GLEW\lib\Release\Win32;C:\Users\zackl\source\repos\GLTest\Dependencies\GLFW\lib-vc2019;E:\Library\projects\Terrain-Generation\GLTest\Dependencies\glew-2.1.0\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;User32.lib;Gdi32.lib;Shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(solutionDir)Dependencies\GLFW-64\lib-vc2019;$(solutionDir)Dependencies\glew-2.1.0\lib\Release\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>32</TargetMachinePlatform>
+      <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -167,6 +175,6 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.6.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.2.targets" />
   </ImportGroup>
 </Project>

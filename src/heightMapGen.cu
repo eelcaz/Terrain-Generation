@@ -2,7 +2,7 @@
 #include <iomanip>
 #include "terrain_generator.h"
 
-__constant__ static constexpr int PERMUTATION[] = {
+__constant__ static const int PERMUTATION[] = {
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,
     103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,
     26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,
@@ -51,8 +51,8 @@ __global__ void chunkHeightMapKernel(int chunkZ, int chunkX, int *chunk) {
     double total = 0.0;
     double maxVal = 0;
     for (int i = 0; i < octaves; ++i) {
-        float amplitude = pow(0.58f, i);
-        float frequency = pow(2.0f, i);
+        double amplitude = pow(0.58, (double) i);
+        double frequency = pow(2.0, (double) i);
 
         noiseZ = z * frequency;
         noiseX = x * frequency;
