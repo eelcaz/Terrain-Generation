@@ -11,6 +11,7 @@
 #include <terrain_generator.h>
 #include <shaders.h>
 #include <camera.h>
+#include <tables.h>
 
 
 #define NUM_CHUNKS 8
@@ -83,6 +84,8 @@ int main(int argc, char** argv) {
     std::vector<GLfloat> vertices_3D_caves(0);
     int l;
     int m;
+    /*
+    // k = y, i = z, j = x; pushed as (x, y, z)
     for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
         for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
             auto D_chunks = Terrain::generateChunkData(l, m);
@@ -90,22 +93,77 @@ int main(int argc, char** argv) {
                 for (i = 0; i < Terrain::CHUNK_WIDTH; i++) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH; j++) {
                         if (D_chunks[k][i][j] == 1) {
-                            vertices_3D.push_back((i + Terrain::CHUNK_WIDTH * l));
+                            vertices_3D.push_back((j + Terrain::CHUNK_WIDTH * m));
                             vertices_3D.push_back(k/2.0);
-                            vertices_3D.push_back((j + Terrain::CHUNK_WIDTH*m));
+                            vertices_3D.push_back((i + Terrain::CHUNK_WIDTH * l));
                         }
                         else {
-                            vertices_3D_caves.push_back((i + Terrain::CHUNK_WIDTH * l));
-                            vertices_3D_caves.push_back(k/2.0);
                             vertices_3D_caves.push_back((j + Terrain::CHUNK_WIDTH * m));
+                            vertices_3D_caves.push_back(k/2.0);
+                            vertices_3D_caves.push_back((i + Terrain::CHUNK_WIDTH * l));
                         }
                     }
                 }
             }
         }
     }
+    */
     
-    
+    std::vector<GLfloat> new_vertices_3D(0);
+    auto chunk = Terrain::generateChunkData(0, 0);
+    for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
+        for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
+            for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
+                int b = 0;
+                b += chunk[k    ][i + 1][j + 1];    // v7
+                b <<= 1;
+                b += chunk[k + 1][i + 1][j + 1];    // v6
+                b <<= 1;
+                b += chunk[k + 1][i    ][j + 1];    // v5
+                b <<= 1;
+                b += chunk[k    ][i    ][j + 1];    // v4
+                b <<= 1;
+                b += chunk[k    ][i + 1][j    ];    // v3
+                b <<= 1;
+                b += chunk[k + 1][i + 1][j    ];    // v2
+                b <<= 1;
+                b += chunk[k + 1][i    ][j    ];    // v1
+                b <<= 1;
+                b += chunk[k    ][i    ][j    ];    // v0
+
+                unsigned int e = edgeTable[b];
+                unsigned int numTriangles = case_to_numpolys[b];
+                unsigned int triangles[16];
+                for(int iterate = 0; iterate < 16; iterate++) {
+                   triangles[iterate] = triTable[b][iterate];
+                }
+                float edges[12][3] = {
+                    {i + 0.0, j + 0.0, k + 0.5},    // e0
+                    {i + 0.5, j + 0.0, k + 1.0},    // e1
+                    {i + 1.0, j + 0.0, k + 0.5},    // e2
+                    {i + 0.5, j + 0.0, k + 0.0},    // e3
+                    {i + 0.0, j + 1.0, k + 0.5},    // e4
+                    {i + 0.5, j + 1.0, k + 1.0},    // e5
+                    {i + 1.0, j + 1.0, k + 0.5},    // e6
+                    {i + 0.5, j + 1.0, k + 0.0},    // e7
+                    {i + 0.0, j + 0.5, k + 0.0},    // e8
+                    {i + 0.0, j + 0.5, k + 1.0},    // e9
+                    {i + 1.0, j + 0.5, k + 1.0},    // e10
+                    {i + 1.0, j + 0.5, k + 0.0}     // e11
+                };
+                //std::cout << numVerts;
+                for (int iterate = 0; iterate < numTriangles; iterate++) {
+                    for (int ij = 0; ij < 3; ij++) {
+                        auto curEdge = triangles[iterate*3+ij];
+                        new_vertices_3D.push_back(edges[curEdge][1]);
+                        new_vertices_3D.push_back(edges[curEdge][2]);
+                        new_vertices_3D.push_back(edges[curEdge][0]);                        
+                    }
+                }
+            }
+        }
+    }
+
     /*
     std::vector<GLfloat> vertices(Terrain::CHUNK_WIDTH* Terrain::CHUNK_WIDTH* NUM_CHUNKS * 3);
     std::vector<GLuint> elements((Terrain::CHUNK_WIDTH)*(Terrain::CHUNK_WIDTH-1)*NUM_CHUNKS*3*2);
@@ -166,11 +224,11 @@ int main(int argc, char** argv) {
     glGenVertexArrays(1, &VAOP);
     glBindVertexArray(VAOP);
     glBindBuffer(GL_ARRAY_BUFFER, VBOP);
-    glBufferData(GL_ARRAY_BUFFER, vertices_3D.size() * sizeof(GLfloat), &vertices_3D[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, new_vertices_3D.size() * sizeof(GLfloat), &new_vertices_3D[0], GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
-
+    /*
     // VBO for Cave Points
     GLuint VBOP2;
     glGenBuffers(1, &VBOP2);
@@ -182,7 +240,7 @@ int main(int argc, char** argv) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
-
+    */
 
     /*
     // VBO for the "chunk strip"
@@ -295,16 +353,16 @@ int main(int argc, char** argv) {
         glBindVertexArray(VAOP);
         glPointSize(10);
         glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), grass.x, grass.y, grass.z);
-        glDrawArrays(GL_POINTS, 0, vertices_3D.size());
+        glDrawArrays(GL_TRIANGLES, 0, new_vertices_3D.size());
         glBindVertexArray(0);
 
-        
+        /*
         glBindVertexArray(VAOP2);
         glPointSize(50);
         glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), dirt.x, dirt.y, dirt.z);
         glDrawArrays(GL_POINTS, 0, vertices_3D_caves.size());
         glBindVertexArray(0);
-        
+        */
 
         View = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         mvp = Projection * View * Model;
@@ -326,7 +384,7 @@ int main(int argc, char** argv) {
     glDeleteBuffers(1, &EBO2);
     */
     glDeleteBuffers(1, &VBOP);
-    glDeleteBuffers(1, &VBOP2);
+    //glDeleteBuffers(1, &VBOP2);
 
     glfwDestroyWindow(window);
     glfwTerminate();
