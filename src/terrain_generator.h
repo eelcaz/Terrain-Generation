@@ -9,7 +9,8 @@ public:
     // good zoom values seem to be 256/CHUNK_WIDTH
     static const int TERRAIN_ZOOM = 16;
     static const int TERRAIN_AMPLITUDE = 200;
-
+    static const int CAVE_ZOOM = 1;
+    static constexpr double CAVE_INTENSITY = -0.25;
     static int** generateChunkHeightMap(int chunkZ, int chunkX);
     static int* generateChunkHeightMapGpu(int chunkZ, int chunkX);
     static int*** generateChunkData(int chunkZ, int chunkX);
