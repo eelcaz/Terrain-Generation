@@ -128,7 +128,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(solutionDir)Dependencies\GLEW\include;C:\Users\zackl\Desktop\Stevens\22S\parallel\Terrain-Generation\Dependencies\GLFW-64\include;$(solutionDir)Dependencies\glm;$(solutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(solutionDir)Dependencies\GLEW\include;$(solutionDir)Dependencies\GLFW-64\include;$(solutionDir)Dependencies\glm;$(solutionDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
