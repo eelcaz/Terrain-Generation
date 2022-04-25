@@ -3,48 +3,24 @@
 **.exe
 marching-cubes-cuda-master/
 
-# user specific files
-*.rsuser
-*.suo
+
+/src/Debug
+/src/Release
+/src/x64/Debug
+/src/x64/Release
+/x64
+
+
 *.user
-*.userosscache
-*.sln.docstates
-
-# User-specific files (MonoDevelop/Xamarin Studio)
-*.userprefs
-
-# Mono auto generated files
-mono_crash.*
-
-# Files built by Visual Studio
-*_i.c
-*_p.c
-*_h.h
-*.ilk
-*.meta
-*.obj
-*.iobj
-*.pch
 *.pdb
-*.ipdb
-*.pgc
-*.pgd
-*.rsp
-*.sbr
-*.tlb
-*.tli
-*.tlh
-*.tmp
-*.tmp_proj
-*_wpftmp.csproj
 *.log
 *.tlog
-*.vspscc
-*.vssscc
-.builds
-*.pidb
-*.svclog
-*.scc
 
-# keep dependencies as is
-!Dependencies
+# Dependency files
+!/Dependencies
+!/Dependencies/**
+
+tmp
+build
+Debug
+Release
