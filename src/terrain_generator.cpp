@@ -6,7 +6,6 @@
 #include "terrain_generator.h"
 #include "heightMapGen.h"
 #include "perlin_noise.h"
-#include "perlin_noise_3d.h"
 
 double Terrain::fbmNoise(double z, double x, int octaves) {
     double total = 0.0;
@@ -19,6 +18,8 @@ double Terrain::fbmNoise(double z, double x, int octaves) {
     }
     return total/maxVal;
 };
+
+Terrain::Terrain(unsigned int seed) : noise3D(PerlinNoise3D(seed)) {}
 
 int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
     // allocate new chunk heightmap
@@ -68,7 +69,6 @@ int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
     }
 
     // this is here just to test that the 3D perlin noise works
-    PerlinNoise3D noise3D(999);
     for (int y = 0; y < CHUNK_HEIGHT; ++y) {
         for (int z = 0; z < CHUNK_WIDTH; ++z) {
             for (int x = 0; x < CHUNK_WIDTH; ++x) {
