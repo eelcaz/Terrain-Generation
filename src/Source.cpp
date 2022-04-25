@@ -15,7 +15,7 @@
 
 
 #define NUM_CHUNKS 8
-
+#define SEED 2022
 // location = 0 bc of attrib pointer
 
 
@@ -110,7 +110,8 @@ int main(int argc, char** argv) {
     */
     
     std::vector<GLfloat> new_vertices_3D(0);
-    auto chunk = Terrain::generateChunkData(0, 0);
+    Terrain terrain(SEED);
+    auto chunk = terrain.generateChunkData(0, 0);
     for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
         for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
             for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
