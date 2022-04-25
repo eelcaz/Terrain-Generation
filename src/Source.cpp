@@ -110,54 +110,67 @@ int main(int argc, char** argv) {
     */
     
     std::vector<GLfloat> new_vertices_3D(0);
-    auto chunk = Terrain::generateChunkData(0, 0);
-    for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
-        for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
-            for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
-                int b = 0;
-                b += chunk[k    ][i + 1][j + 1];    // v7
-                b <<= 1;
-                b += chunk[k + 1][i + 1][j + 1];    // v6
-                b <<= 1;
-                b += chunk[k + 1][i    ][j + 1];    // v5
-                b <<= 1;
-                b += chunk[k    ][i    ][j + 1];    // v4
-                b <<= 1;
-                b += chunk[k    ][i + 1][j    ];    // v3
-                b <<= 1;
-                b += chunk[k + 1][i + 1][j    ];    // v2
-                b <<= 1;
-                b += chunk[k + 1][i    ][j    ];    // v1
-                b <<= 1;
-                b += chunk[k    ][i    ][j    ];    // v0
+    std::vector<glm::vec3> normals(0);
+    for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
+        for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
+            auto chunk = Terrain::generateChunkData(l, m);
+            for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
+                for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
+                    for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
+                        int b = 0;
+                        b += chunk[k][i + 1][j + 1];    // v7
+                        b <<= 1;
+                        b += chunk[k + 1][i + 1][j + 1];    // v6
+                        b <<= 1;
+                        b += chunk[k + 1][i][j + 1];    // v5
+                        b <<= 1;
+                        b += chunk[k][i][j + 1];    // v4
+                        b <<= 1;
+                        b += chunk[k][i + 1][j];    // v3
+                        b <<= 1;
+                        b += chunk[k + 1][i + 1][j];    // v2
+                        b <<= 1;
+                        b += chunk[k + 1][i][j];    // v1
+                        b <<= 1;
+                        b += chunk[k][i][j];    // v0
 
-                unsigned int e = edgeTable[b];
-                unsigned int numTriangles = case_to_numpolys[b];
-                unsigned int triangles[16];
-                for(int iterate = 0; iterate < 16; iterate++) {
-                   triangles[iterate] = triTable[b][iterate];
-                }
-                float edges[12][3] = {
-                    {i + 0.0, j + 0.0, k + 0.5},    // e0
-                    {i + 0.5, j + 0.0, k + 1.0},    // e1
-                    {i + 1.0, j + 0.0, k + 0.5},    // e2
-                    {i + 0.5, j + 0.0, k + 0.0},    // e3
-                    {i + 0.0, j + 1.0, k + 0.5},    // e4
-                    {i + 0.5, j + 1.0, k + 1.0},    // e5
-                    {i + 1.0, j + 1.0, k + 0.5},    // e6
-                    {i + 0.5, j + 1.0, k + 0.0},    // e7
-                    {i + 0.0, j + 0.5, k + 0.0},    // e8
-                    {i + 0.0, j + 0.5, k + 1.0},    // e9
-                    {i + 1.0, j + 0.5, k + 1.0},    // e10
-                    {i + 1.0, j + 0.5, k + 0.0}     // e11
-                };
-                //std::cout << numVerts;
-                for (int iterate = 0; iterate < numTriangles; iterate++) {
-                    for (int ij = 0; ij < 3; ij++) {
-                        auto curEdge = triangles[iterate*3+ij];
-                        new_vertices_3D.push_back(edges[curEdge][1]);
-                        new_vertices_3D.push_back(edges[curEdge][2]);
-                        new_vertices_3D.push_back(edges[curEdge][0]);                        
+                        unsigned int e = edgeTable[b];
+                        unsigned int numTriangles = case_to_numpolys[b];
+                        unsigned int triangles[16];
+                        for (int iterate = 0; iterate < 16; iterate++) {
+                            triangles[iterate] = triTable[b][iterate];
+                        }
+                        float edges[12][3] = {
+                            {i + 0.0, j + 0.0, k + 0.5},    // e0
+                            {i + 0.5, j + 0.0, k + 1.0},    // e1
+                            {i + 1.0, j + 0.0, k + 0.5},    // e2
+                            {i + 0.5, j + 0.0, k + 0.0},    // e3
+                            {i + 0.0, j + 1.0, k + 0.5},    // e4
+                            {i + 0.5, j + 1.0, k + 1.0},    // e5
+                            {i + 1.0, j + 1.0, k + 0.5},    // e6
+                            {i + 0.5, j + 1.0, k + 0.0},    // e7
+                            {i + 0.0, j + 0.5, k + 0.0},    // e8
+                            {i + 0.0, j + 0.5, k + 1.0},    // e9
+                            {i + 1.0, j + 0.5, k + 1.0},    // e10
+                            {i + 1.0, j + 0.5, k + 0.0}     // e11
+                        };
+                        //std::cout << numVerts;
+                        for (int iterate = 0; iterate < numTriangles; iterate++) {
+                            std::vector<glm::vec3> points(0);
+                            for (int ij = 0; ij < 3; ij++) {
+                                auto curEdge = triangles[iterate * 3 + ij];
+                                auto px = edges[curEdge][1] + Terrain::CHUNK_WIDTH * m;
+                                auto py = edges[curEdge][2];
+                                auto pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * l;
+                                new_vertices_3D.push_back(px);
+                                new_vertices_3D.push_back(py);
+                                new_vertices_3D.push_back(pz);
+                                if (ij < 2) {
+                                    points.push_back(glm::vec3(px, py, pz));
+                                }
+                            }
+                            normals.push_back(glm::cross(points[0], points[1]));
+                        }
                     }
                 }
             }
@@ -334,6 +347,7 @@ int main(int argc, char** argv) {
 
         // startup
         glUseProgram(shaderProgram);
+        
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
         // draw the triangle, index 0, 3 vertices
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);

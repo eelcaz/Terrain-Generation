@@ -14,10 +14,12 @@ layout(location = 0) in vec3 position;
 uniform mat4 MVP;
 
 out vec4 out_color;
+out vec3 Normal;
 
 void main()
 {
 gl_Position = MVP * vec4(position, 1.0);
+//Normal = aNormal;
 out_color = vec4(position.x/255, position.y/40, position.z/255, 1.0);
 }
 )glsl";
@@ -26,6 +28,7 @@ const GLchar* planeFSSource = R"glsl(
 #version 440 core
 
 in vec4 out_color;
+in vec3 Normal;
 out vec4 color;
 
 uniform vec3 u_color;
