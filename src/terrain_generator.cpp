@@ -9,11 +9,11 @@
 #include "perlin_noise_3d.h"
 
 double Terrain::fbmNoise(double z, double x, int octaves) {
-    float total = 0.0;
-    float maxVal = 0;
+    double total = 0.0;
+    double maxVal = 0;
     for (int i = 0; i < octaves; ++i) {
-        float amplitude = pow(0.58f, i);
-        float frequency = pow(2.0f, i);
+        double amplitude = pow(0.58f, i);
+        double frequency = pow(2.0f, i);
         total += PerlinNoise::noise(z*frequency, x*frequency) * amplitude;
         maxVal += amplitude;
     }
@@ -36,8 +36,7 @@ int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
                 6
             );
             val = (val + 1) / 2;
-            val = (int)floor(val * TERRAIN_AMPLITUDE);
-            heightMap[z][x] = val;
+            heightMap[z][x] = (int)floor(val * TERRAIN_AMPLITUDE);
         }
     }
 

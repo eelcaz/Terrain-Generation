@@ -12,8 +12,8 @@ PerlinNoise3D::PerlinNoise3D(unsigned int seed) {
     std::uniform_real_distribution<> distribution;
     auto dice = std::bind(distribution, generator);
     for (unsigned i = 0; i < tableSize; ++i) {
-        float theta = acos(2 * dice() - 1);
-        float phi = 2 * dice() * M_PI;
+        double theta = acos(2 * dice() - 1);
+        double phi = 2 * dice() * M_PI;
 
         double x = cos(phi) * sin(theta);
         double y = sin(phi) * sin(theta);
