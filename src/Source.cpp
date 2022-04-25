@@ -28,7 +28,7 @@ out vec4 out_color;
 void main()
 {
 gl_Position = MVP * vec4(position, 1.0);
-out_color = vec4(gl_Position.y, gl_Position.y, gl_Position.y, 1.0);
+out_color = vec4(position.x/255, position.y/40, position.z/255, 1.0);
 }
 )glsl";
 
@@ -160,8 +160,35 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-
     // vertex data loading -- posx, posy, posz, r, g, b
+    std::vector<GLfloat> vertices_3D(0);
+    std::vector<GLfloat> vertices_3D_caves(0);
+    int l;
+    int m;
+    for (m = 0; m < 16; m++) {
+        for (l = 0; l < 16; l++) {
+            auto D_chunks = Terrain::generateChunkData(l, m);
+            for (k = 0; k < Terrain::CHUNK_HEIGHT; k++) {
+                for (i = 0; i < Terrain::CHUNK_WIDTH; i++) {
+                    for (j = 0; j < Terrain::CHUNK_WIDTH; j++) {
+                        if (D_chunks[k][i][j] == 1) {
+                            vertices_3D.push_back((i + Terrain::CHUNK_WIDTH * l));
+                            vertices_3D.push_back(k);
+                            vertices_3D.push_back((j + Terrain::CHUNK_WIDTH*m));
+                        }
+                        else {
+                            vertices_3D_caves.push_back((i + Terrain::CHUNK_WIDTH * l));
+                            vertices_3D_caves.push_back(k);
+                            vertices_3D_caves.push_back((j + Terrain::CHUNK_WIDTH * m));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    
+
     std::vector<GLfloat> vertices(Terrain::CHUNK_WIDTH* Terrain::CHUNK_WIDTH* NUM_CHUNKS * 3);
     std::vector<GLuint> elements((Terrain::CHUNK_WIDTH)*(Terrain::CHUNK_WIDTH-1)*NUM_CHUNKS*3*2);
 
@@ -176,7 +203,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    int l = 0;
+    l = 0;
     for (k = 0; k < NUM_CHUNKS; k++) {
         for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
             for (i = 0; i < Terrain::CHUNK_WIDTH-1; i++) {
@@ -212,6 +239,30 @@ int main(int argc, char** argv) {
         0, 1, 2,
         0, 3, 2
     };
+
+    GLuint VBOP;
+    glGenBuffers(1, &VBOP);
+    GLuint VAOP;
+    glGenVertexArrays(1, &VAOP);
+    glBindVertexArray(VAOP);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOP);
+    glBufferData(GL_ARRAY_BUFFER, vertices_3D.size() * sizeof(GLfloat), &vertices_3D[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+
+    GLuint VBOP2;
+    glGenBuffers(1, &VBOP2);
+    GLuint VAOP2;
+    glGenVertexArrays(1, &VAOP2);
+    glBindVertexArray(VAOP2);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOP2);
+    glBufferData(GL_ARRAY_BUFFER, vertices_3D_caves.size() * sizeof(GLfloat), &vertices_3D_caves[0], GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+
+
 
     GLuint VBO;
     glGenBuffers(1, &VBO);
@@ -297,7 +348,7 @@ int main(int argc, char** argv) {
     glm::vec3 dirt = glm::vec3(155.0f, 118.0f, 83.0f) / 255.0f;
     glm::vec3 grass = glm::vec3(86.0f, 125.0f, 70.0f) / 255.0f;
     glClearColor(sky.x, sky.y, sky.z, 0.0f);
-    //glPointSize(5);
+    glPointSize(10);
     do {
         processInput(window);
         float currentFrame = glfwGetTime();
@@ -326,6 +377,16 @@ int main(int argc, char** argv) {
         //glDrawElements(GL_TRIANGLES, sizeof(second_elements) / sizeof(elements[0]), GL_UNSIGNED_INT, 0);
         glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), dirt.x, dirt.y, dirt.z);
         glDrawElements(GL_TRIANGLES, sizeof(second_elements) / sizeof(second_elements[0]), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+        glBindVertexArray(VAOP);
+        glPointSize(10);
+        glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), grass.x, grass.y, grass.z);
+        glDrawArrays(GL_POINTS, 0, vertices_3D.size() / 3);
+        glBindVertexArray(0);
+        glBindVertexArray(VAOP2);
+        glPointSize(50);
+        glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), dirt.x, dirt.y, dirt.z);
+        glDrawArrays(GL_POINTS, 0, vertices_3D_caves.size() / 3);
         glBindVertexArray(0);
 
         View = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
