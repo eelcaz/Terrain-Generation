@@ -9,56 +9,15 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <GLFW/glfw3.h>
 #include <terrain_generator.h>
+#include <shaders.h>
+#include <camera.h>
 
-#define WIDTH 1920
-#define HEIGHT 1080
 
 #define NUM_CHUNKS 8
 
 // location = 0 bc of attrib pointer
-const GLchar* vertexShaderSource = R"glsl(
-#version 440 core
 
-layout(location = 0) in vec3 position;
 
-uniform mat4 MVP;
-
-out vec4 out_color;
-
-void main()
-{
-gl_Position = MVP * vec4(position, 1.0);
-out_color = vec4(position.x/255, position.y/40, position.z/255, 1.0);
-}
-)glsl";
-
-const GLchar* fragmentShaderSource = R"glsl(
-#version 440 core
-
-in vec4 out_color;
-out vec4 color;
-
-uniform vec3 u_color;
-
-void main()
-{
-color = out_color;
-color = vec4(u_color.xyz, 1.0);
-}
-)glsl";
-
-glm::vec3 cameraPos = glm::vec3(0.0f, 70.0f, 40.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-float pitch = 0.0f;
-float yaw = -90.0f;
-
-bool firstMouse = true;
-float lastX = WIDTH / 2.0f, lastY = HEIGHT / 2.0f;
-
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
 
 int main(int argc, char** argv) {
     int i = 0;
@@ -112,73 +71,32 @@ int main(int argc, char** argv) {
     std::cout << glGetString(GL_VERSION) << std::endl;
 
 
-
     // load shaders
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    // which shader, number of shaders, source glsl shader code, length done internally
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    // always keep an eye on the compilation process
-    glCompileShader(vertexShader);
-
-    // keeping an eye on it!
-    GLint success;
-    GLchar info_log[512];
-    // get shader inventory ; which shader, which inventory you want (also maybe link),
-    // and then where ur writing success to
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-    if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, info_log);
-        std::cout << "ERORR::SHADER::VERTEX::COMPILATION_FAILED\n" << info_log << std::endl;
-        return -1;
-    }
-
-
-    // fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, info_log);
-        std::cout << "ERORR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << info_log << std::endl;
-        return -1;
-    }
-
-
+    int res;
+    if ((res = loadShaders()) == -1) return res;
+    
     // link shaders and start it up
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, info_log);
-        std::cout << "ERROR::PROGRAM::LINKER_FAILED\n" << info_log << std::endl;
-        return -1;
-    }
+    if((res = linkShaders()) == -1) return res;
 
     // vertex data loading -- posx, posy, posz, r, g, b
     std::vector<GLfloat> vertices_3D(0);
     std::vector<GLfloat> vertices_3D_caves(0);
     int l;
     int m;
-    for (m = 0; m < 16; m++) {
-        for (l = 0; l < 16; l++) {
+    for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
+        for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
             auto D_chunks = Terrain::generateChunkData(l, m);
             for (k = 0; k < Terrain::CHUNK_HEIGHT; k++) {
                 for (i = 0; i < Terrain::CHUNK_WIDTH; i++) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH; j++) {
                         if (D_chunks[k][i][j] == 1) {
                             vertices_3D.push_back((i + Terrain::CHUNK_WIDTH * l));
-                            vertices_3D.push_back(k);
+                            vertices_3D.push_back(k/2.0);
                             vertices_3D.push_back((j + Terrain::CHUNK_WIDTH*m));
                         }
                         else {
                             vertices_3D_caves.push_back((i + Terrain::CHUNK_WIDTH * l));
-                            vertices_3D_caves.push_back(k);
+                            vertices_3D_caves.push_back(k/2.0);
                             vertices_3D_caves.push_back((j + Terrain::CHUNK_WIDTH * m));
                         }
                     }
@@ -188,14 +106,14 @@ int main(int argc, char** argv) {
     }
     
     
-
+    /*
     std::vector<GLfloat> vertices(Terrain::CHUNK_WIDTH* Terrain::CHUNK_WIDTH* NUM_CHUNKS * 3);
     std::vector<GLuint> elements((Terrain::CHUNK_WIDTH)*(Terrain::CHUNK_WIDTH-1)*NUM_CHUNKS*3*2);
 
     for (k = 0; k < NUM_CHUNKS; k++) {
         for (i = 0; i < Terrain::CHUNK_WIDTH; i++) {
             for (j = 0; j < Terrain::CHUNK_WIDTH; j++) {
-                int cur = k * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH * 3 + i * Terrain::CHUNK_WIDTH * 3 + j * 3;
+                unsigned int cur = k * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH * 3 + i * Terrain::CHUNK_WIDTH * 3 + j * 3;
                 vertices[cur + 0] = i - Terrain::CHUNK_WIDTH / 2.0f + k * Terrain::CHUNK_WIDTH;
                 vertices[cur + 2] = -j;
                 vertices[cur + 1] = heights[k][i*Terrain::CHUNK_WIDTH + j];
@@ -239,7 +157,9 @@ int main(int argc, char** argv) {
         0, 1, 2,
         0, 3, 2
     };
+    */
 
+    // VBO for Land Points
     GLuint VBOP;
     glGenBuffers(1, &VBOP);
     GLuint VAOP;
@@ -251,6 +171,7 @@ int main(int argc, char** argv) {
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 
+    // VBO for Cave Points
     GLuint VBOP2;
     glGenBuffers(1, &VBOP2);
     GLuint VAOP2;
@@ -263,7 +184,8 @@ int main(int argc, char** argv) {
     glBindVertexArray(0);
 
 
-
+    /*
+    // VBO for the "chunk strip"
     GLuint VBO;
     glGenBuffers(1, &VBO);
 
@@ -281,24 +203,12 @@ int main(int argc, char** argv) {
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
 
+    // VBO for "ground"
     GLuint VBO2;
     glGenBuffers(1, &VBO2);
     glBindBuffer(GL_ARRAY_BUFFER, VBO2);
     glBufferData(GL_ARRAY_BUFFER, sizeof(second_verts), second_verts, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // getting ready to send to shader
-    // first param is index, second param is number of indices
-    // third is type, fourth is for normalization
-    // fifth is stride of bytes to move between each vertex
-    // sixth is pointer to the first element ; in some cases u can ignore void, dunno why
-    // 6 * sizeof(GLfloat) for sending position AND color, 3 for position
-    //glEnableVertexAttribArray(0);
-    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-
-    // need attrib pointer to actually tell the gpu how to process the data
-    //glEnableVertexAttribArray(1);
-    //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-
     // unbinding is just binding to 0 ; vao handles this
     //glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -312,20 +222,24 @@ int main(int argc, char** argv) {
     glGenVertexArrays(1, &VAO2);
     glBindVertexArray(VAO2);
 
+    // getting ready to send to shader
+    // first param is index, second param is number of indices
+    // third is type, fourth is for normalization
+    // fifth is stride of bytes to move between each vertex
+    // sixth is pointer to the first element ; in some cases u can ignore void, dunno why
     glBindBuffer(GL_ARRAY_BUFFER, VBO2);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
     glBindVertexArray(0);
+    */
 
     glUseProgram(shaderProgram);
     glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), 1.0f, 0.5f, 0.5f);
-    //glUniform3f(glGetUniformLocation(shaderProgram, "in_color"), 1.0f, 0.5f, 0.5f);
     glUseProgram(0);
 
-    glm::mat4 Projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
-
+    glm::mat4 Projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
     //glm::mat4 Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f);
 
     //lookAt takes in camera position, target position, and up in the world space
@@ -340,9 +254,7 @@ int main(int argc, char** argv) {
 
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    void mouse_callback(GLFWwindow* window, double xpos, double ypos);
     glfwSetCursorPosCallback(window, mouse_callback);
-    void processInput(GLFWwindow* window);
 
     glm::vec3 sky = glm::vec3(140.0f, 189.0f, 214.0f) / 255.0f;
     glm::vec3 dirt = glm::vec3(155.0f, 118.0f, 83.0f) / 255.0f;
@@ -368,6 +280,7 @@ int main(int argc, char** argv) {
         // draw the triangle, index 0, 3 vertices
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         //glDrawArrays(GL_TRIANGLES, 0, 3); // could to GL_POINTS, GL_LINE_STRIP
+        /*
         glBindVertexArray(VAO);
         glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), grass.x, grass.y, grass.z);
         glDrawElements(GL_TRIANGLES, elements.size(), GL_UNSIGNED_INT, 0);
@@ -378,16 +291,20 @@ int main(int argc, char** argv) {
         glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), dirt.x, dirt.y, dirt.z);
         glDrawElements(GL_TRIANGLES, sizeof(second_elements) / sizeof(second_elements[0]), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+        */
         glBindVertexArray(VAOP);
         glPointSize(10);
         glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), grass.x, grass.y, grass.z);
-        glDrawArrays(GL_POINTS, 0, vertices_3D.size() / 3);
+        glDrawArrays(GL_POINTS, 0, vertices_3D.size());
         glBindVertexArray(0);
+
+        
         glBindVertexArray(VAOP2);
         glPointSize(50);
         glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), dirt.x, dirt.y, dirt.z);
-        glDrawArrays(GL_POINTS, 0, vertices_3D_caves.size() / 3);
+        glDrawArrays(GL_POINTS, 0, vertices_3D_caves.size());
         glBindVertexArray(0);
+        
 
         View = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         mvp = Projection * View * Model;
@@ -400,76 +317,18 @@ int main(int argc, char** argv) {
         glfwPollEvents();
 
     } while (!glfwWindowShouldClose(window));
-
+    /*
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &VBO2);
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glDeleteShader(planeVS);
+    glDeleteShader(planeFS);
     glDeleteBuffers(1, &EBO);
     glDeleteBuffers(1, &EBO2);
+    */
+    glDeleteBuffers(1, &VBOP);
+    glDeleteBuffers(1, &VBOP2);
 
     glfwDestroyWindow(window);
     glfwTerminate();
     return EXIT_SUCCESS;
-}
-
-void processInput(GLFWwindow* window) {
-    float cameraSpeed = 25.0f * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        cameraSpeed = 50.0f * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE)
-        cameraSpeed = 25.0f * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraUp;
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraUp;
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-}
-
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
-{
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
-    lastX = xpos;
-    lastY = ypos;
-
-    float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
-
 }
