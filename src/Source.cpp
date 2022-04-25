@@ -108,12 +108,12 @@ int main(int argc, char** argv) {
         }
     }
     */
-    
+    Terrain terrain(SEED);
     std::vector<GLfloat> new_vertices_3D(0);
     std::vector<glm::vec3> normals(0);
     for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
         for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
-            auto chunk = Terrain::generateChunkData(l, m);
+            auto chunk = terrain.generateChunkData(l, m);
             for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
                 for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
