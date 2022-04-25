@@ -6,6 +6,20 @@
 
 #include <iostream>
 
+PerlinNoise3D::PerlinNoise3D() {
+    std::mt19937 generator(0);
+    std::uniform_real_distribution<> distribution;
+    auto dice = std::bind(distribution, generator);
+    for (unsigned i = 0; i < tableSize; ++i) {
+        double theta = acos(2 * dice() - 1);
+        double phi = 2 * dice() * M_PI;
+
+        double x = cos(phi) * sin(theta);
+        double y = sin(phi) * sin(theta);
+        double z = cos(theta);
+        gradients[i] = {y, z, x};
+    }
+}
 
 PerlinNoise3D::PerlinNoise3D(unsigned int seed) {
     std::mt19937 generator(seed);

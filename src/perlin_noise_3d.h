@@ -28,6 +28,7 @@ private:
     Vector3 gradients[tableSize];
 public:
     PerlinNoise3D(unsigned int seed);
+    PerlinNoise3D();
     double interpolate(double a, double b, double weight);
     Vector3 randomGradient(int y, int z, int x);
     double dotProduct(int GridY, int GridZ, int GridX, double py, double pz, double px);

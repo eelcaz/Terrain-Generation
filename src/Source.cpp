@@ -15,7 +15,7 @@
 
 
 #define NUM_CHUNKS 8
-
+#define SEED 2022
 // location = 0 bc of attrib pointer
 
 
