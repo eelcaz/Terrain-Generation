@@ -5,6 +5,7 @@
 
 #include "terrain_generator.h"
 #include "heightMapGen.h"
+#include "chunkGen.h"
 #include "perlin_noise.h"
 
 double Terrain::fbmNoise(double z, double x, int octaves) {
@@ -19,7 +20,7 @@ double Terrain::fbmNoise(double z, double x, int octaves) {
     return total/maxVal;
 };
 
-Terrain::Terrain(unsigned int seed) : noise3D(PerlinNoise3D(seed)) {}
+Terrain::Terrain(unsigned int seed) : noise3D(PerlinNoise3D(seed)) {};
 
 int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
     // allocate new chunk heightmap
@@ -50,13 +51,7 @@ int* Terrain::generateChunkHeightMapGpu(int chunkZ, int chunkX) {
 
 int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
     // allocate data for whole chunk, zero initialized
-    int ***chunk = new int**[CHUNK_HEIGHT];
-    for (int y = 0; y < CHUNK_HEIGHT; ++y) {
-        chunk[y] = new int*[CHUNK_WIDTH];
-        for (int z = 0; z < CHUNK_WIDTH; ++z) {
-            chunk[y][z] = new int[CHUNK_WIDTH]{0};
-        }
-    }
+    int ***chunk = Terrain::createEmptyChunkCpu();
 
     auto heightMap = generateChunkHeightMap(chunkZ, chunkX);
     // solid parts of chunk will have value of 1, otherwise 0
@@ -88,7 +83,33 @@ int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
     return chunk;
 };
 
-void Terrain::deallocateChunk(int*** chunk) {
+int* Terrain::generateChunkDataGpu(int chunkZ, int chunkX) {
+    auto heights = chunkHeightMapKernel(chunkZ, chunkX);
+    return chunkDataKernel(chunkZ, chunkX, heights, noise3D.gradientsGPU);
+};
+
+
+int* Terrain::generateChunkDataGpuOpt(int chunkZ, int chunkX) {
+    return new int[1];
+};
+
+int*** Terrain::createEmptyChunkCpu() {
+    // allocate data for whole chunk, zero initialized
+    int ***chunk = new int**[CHUNK_HEIGHT];
+    for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+        chunk[y] = new int*[CHUNK_WIDTH];
+        for (int z = 0; z < CHUNK_WIDTH; ++z) {
+            chunk[y][z] = new int[CHUNK_WIDTH]{0};
+        }
+    }
+    return chunk;
+};
+
+int* Terrain::createEmptyChunkGpu() {
+    return new int[CHUNK_HEIGHT*CHUNK_WIDTH*CHUNK_WIDTH];
+}
+
+void Terrain::deallocateChunk(int*** &chunk) {
     for (int y = 0; y < CHUNK_HEIGHT; ++y) {
         for (int z = 0; z < CHUNK_WIDTH; ++z) {
             delete[] chunk[y][z];

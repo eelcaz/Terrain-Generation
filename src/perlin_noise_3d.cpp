@@ -18,6 +18,9 @@ PerlinNoise3D::PerlinNoise3D() {
         double y = sin(phi) * sin(theta);
         double z = cos(theta);
         gradients[i] = {y, z, x};
+        gradientsGPU[i*3] = y;
+        gradientsGPU[i*3 + 1] = z;
+        gradientsGPU[i*3 + 2] = x;
     }
 }
 
@@ -33,6 +36,9 @@ PerlinNoise3D::PerlinNoise3D(unsigned int seed) {
         double y = sin(phi) * sin(theta);
         double z = cos(theta);
         gradients[i] = {y, z, x};
+        gradientsGPU[i*3] = y;
+        gradientsGPU[i*3 + 1] = z;
+        gradientsGPU[i*3 + 2] = x;
     }
 }
 

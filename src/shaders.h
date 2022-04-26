@@ -16,7 +16,7 @@ layout(location = 1) in vec3 aNormal;
 uniform mat4 MVP;
 uniform mat4 model;
 
-varying vec3 Normal;
+out vec3 Normal;
 
 void main()
 {
@@ -28,7 +28,8 @@ void main()
 const GLchar* planeFSSource = R"glsl(
 #version 440 core
 
-varying vec3 Normal;
+out vec4 color;
+in vec3 Normal;
 
 uniform vec3 u_color;
 uniform vec3 u_reverseLightDirection;
@@ -37,8 +38,8 @@ void main()
 {
     vec3 normal = normalize(Normal);
     float light = dot(normal, normalize(u_reverseLightDirection));
-    gl_FragColor = vec4(u_color.xyz, 1.0);
-    gl_FragColor.rgb *= light;
+    color = vec4(u_color.xyz, 1.0);
+    color.rgb *= light;
 }
 )glsl";
 

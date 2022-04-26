@@ -16,6 +16,9 @@
 
 #define NUM_CHUNKS 8
 #define SEED 2022
+// VERSION: 0 = CPU, 1 = GPU, 2 = GPU Optimized
+#define VERSION 1
+
 /*
 double thing(int x, int y, int z, int l, int m, Terrain terrain) {
     double offset = (double)1 / (2 * Terrain::CHUNK_WIDTH);
@@ -28,10 +31,23 @@ double thing(int x, int y, int z, int l, int m, Terrain terrain) {
     return val;
 }
 */
+
+// location = 0 bc of attrib pointer
+
+
+
 int main(int argc, char** argv) {
     int i = 0;
     int j = 0;
     int k = 0;
+
+#if VERSION == 1
+    std::cout << "In GPU implementation" << std::endl;
+#elif VERSION == 2
+    std::cout << "In Optimized GPU implementtation" << std::endl;
+#else
+    std::cout << "In CPU implementation" << std::endl;
+#endif
 
     auto heights = new int *[NUM_CHUNKS];
     for (int i = 0; i < NUM_CHUNKS; ++i) {
@@ -80,21 +96,13 @@ int main(int argc, char** argv) {
     std::vector<int***> chunks(0);
     for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
         for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
-            chunks.push_back(terrain.generateChunkData(l, m));
-        }
-    }
-    unsigned long int totalChunkCount = 4 * Terrain::NUM_CHUNKS_SIDE * Terrain::NUM_CHUNKS_SIDE;
-    unsigned long int pointCount = (Terrain::CHUNK_HEIGHT - 1) * (Terrain::CHUNK_WIDTH - 1) * (Terrain::CHUNK_WIDTH - 1);
-    unsigned long int maxTriangleCount = 5;
-    unsigned long int pointsPerTriangle = 6 * 3; // vx, vy, vz, nx, ny, nz for 3 vertices
-    unsigned long int size = totalChunkCount * pointCount * maxTriangleCount * pointsPerTriangle;
-    unsigned long int sizeOfChunk = pointCount * maxTriangleCount * pointsPerTriangle;
-    unsigned long int sizeOfPlane = (Terrain::CHUNK_WIDTH - 1) * (Terrain::CHUNK_WIDTH - 1);
-    GLfloat* vertices_3D = (GLfloat *) calloc(size, sizeof(GLfloat));
-    for (m = 0; m < 2 * Terrain::NUM_CHUNKS_SIDE; m++) {
-        for (l = 0; l < 2 * Terrain::NUM_CHUNKS_SIDE; l++) {
-            auto chunk = terrain.generateChunkData(l - Terrain::NUM_CHUNKS_SIDE, m - Terrain::NUM_CHUNKS_SIDE);
-            unsigned int curChunk = m * sizeOfChunk * sizeOfChunk + l * sizeOfChunk;
+#if VERSION == 1
+            auto chunk = terrain.generateChunkDataGpu(l, m);
+#elif VERSION == 2
+            auto chunk = terrain.generateChunkDataGpu(l, m);
+#else
+            auto chunk = terrain.generateChunkData(l, m);
+#endif
             for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
                 for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
@@ -102,6 +110,33 @@ int main(int argc, char** argv) {
                         unsigned int curIndex = curChunk + curVoxel;
 
                         int b = 0;
+
+#if VERSION == 1 || VERSION == 2
+                        // flat array indexing for gpu returned chunks
+                        int k_ = k*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
+                        int k_1 = k_ + Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
+                        int i_ = i*Terrain::CHUNK_WIDTH;
+                        int i_1 = i_ + Terrain::CHUNK_WIDTH;
+                        int j_ = j;
+                        int j_1 = j_ + 1;
+                        b += chunk[k_  + i_1 + j_1]; // v7
+                        b <<= 1;
+                        b += chunk[k_1 + i_1 + j_1]; // v6
+                        b <<= 1;
+                        b += chunk[k_1 + i_  + j_1]; // v5
+                        b <<= 1;
+                        b += chunk[k_  + i_  + j_1]; // v4
+                        b <<= 1;
+                        b += chunk[k_  + i_1 + j_ ]; // v3
+                        b <<= 1;
+                        b += chunk[k_1 + i_1 + j_ ]; // v2
+                        b <<= 1;
+                        b += chunk[k_1 + i_  + j_ ]; // v1
+                        b <<= 1;
+                        b += chunk[k_ + i_ + j_]; // v0
+
+#else
+                        // 3D array indexing for cpu returned chunks
                         b += chunk[k][i + 1][j + 1];    // v7
                         b <<= 1;
                         b += chunk[k + 1][i + 1][j + 1];    // v6
@@ -117,6 +152,7 @@ int main(int argc, char** argv) {
                         b += chunk[k + 1][i][j];    // v1
                         b <<= 1;
                         b += chunk[k][i][j];    // v0
+#endif
 
                         unsigned int e = edgeTable[b];
                         unsigned int numTriangles = case_to_numpolys[b];
@@ -125,18 +161,18 @@ int main(int argc, char** argv) {
                             triangles[iterate] = triTable[b][iterate];
                         }
                         GLfloat edges[12][3] = {
-                            {i + 0.0, j + 0.0, k + 0.5},    // e0
-                            {i + 0.5, j + 0.0, k + 1.0},    // e1
-                            {i + 1.0, j + 0.0, k + 0.5},    // e2
-                            {i + 0.5, j + 0.0, k + 0.0},    // e3
-                            {i + 0.0, j + 1.0, k + 0.5},    // e4
-                            {i + 0.5, j + 1.0, k + 1.0},    // e5
-                            {i + 1.0, j + 1.0, k + 0.5},    // e6
-                            {i + 0.5, j + 1.0, k + 0.0},    // e7
-                            {i + 0.0, j + 0.5, k + 0.0},    // e8
-                            {i + 0.0, j + 0.5, k + 1.0},    // e9
-                            {i + 1.0, j + 0.5, k + 1.0},    // e10
-                            {i + 1.0, j + 0.5, k + 0.0}     // e11
+                            {i + 0.0f, j + 0.0f, k + 0.5f},    // e0
+                            {i + 0.5f, j + 0.0f, k + 1.0f},    // e1
+                            {i + 1.0f, j + 0.0f, k + 0.5f},    // e2
+                            {i + 0.5f, j + 0.0f, k + 0.0f},    // e3
+                            {i + 0.0f, j + 1.0f, k + 0.5f},    // e4
+                            {i + 0.5f, j + 1.0f, k + 1.0f},    // e5
+                            {i + 1.0f, j + 1.0f, k + 0.5f},    // e6
+                            {i + 0.5f, j + 1.0f, k + 0.0f},    // e7
+                            {i + 0.0f, j + 0.5f, k + 0.0f},    // e8
+                            {i + 0.0f, j + 0.5f, k + 1.0f},    // e9
+                            {i + 1.0f, j + 0.5f, k + 1.0f},    // e10
+                            {i + 1.0f, j + 0.5f, k + 0.0f}     // e11
                         };
                         //std::cout << numVerts;
                         int d = 1;
@@ -147,30 +183,29 @@ int main(int argc, char** argv) {
                         //grad.y = thing(j, k + 1, i, l, m, terrain) - thing(j, k - 1, i, l, m, terrain);
                         //grad.z = thing(j, k, i + 1, l, m, terrain) - thing(j, k, i - 1, l, m, terrain);
                         //grad = -normalize(grad);
+#if VERSION == 1 || VERSION == 2
+                        int k_d = k_ + d*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
+                        int i_d = i_ + d*Terrain::CHUNK_WIDTH;
+                        int j_d = j_ + d;
+                        grad.x = chunk[k_  + i_  + j_d] - chunk[k_ + i_ + j_];
+                        grad.y = chunk[k_d + i_  + j_ ] - chunk[k_ + i_ + j_];
+                        grad.z = chunk[k_  + i_d + j_ ] - chunk[k_ + i_ + j_];
+                        grad = -normalize(grad);
+#else
                         grad.x = chunk[k][i][j + d] - chunk[k][i][j];
                         grad.y = chunk[k + d][i][j] - chunk[k][i][j];
                         grad.z = chunk[k][i + d][j] - chunk[k][i][j];
                         grad = -normalize(grad);
+#endif
 
                         for (int iterate = 0; iterate < numTriangles; iterate++) {
-                            
+                            std::vector<glm::vec3> points(0);
                             for (int ij = 0; ij < 3; ij++) {
                                 auto curEdge = triangles[iterate * 3 + ij];
-                                GLfloat px = edges[curEdge][1] + Terrain::CHUNK_WIDTH * (m-Terrain::NUM_CHUNKS_SIDE);
-                                GLfloat py = edges[curEdge][2];
-                                GLfloat pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * (l-Terrain::NUM_CHUNKS_SIDE);
-                                vertices_3D[curIndex * 6] = px;
-                                vertices_3D[curIndex * 6 + 1] = py;
-                                vertices_3D[curIndex * 6 + 2] = pz;
-                                vertices_3D[curIndex * 6 + 3] = grad.x;
-                                vertices_3D[curIndex * 6 + 4] = grad.y;
-                                vertices_3D[curIndex * 6 + 5] = grad.z;
-                                //new_vertices_3D.push_back(px);
-                                //new_vertices_3D.push_back(py);
-                                //new_vertices_3D.push_back(pz);
-                                //new_vertices_3D.push_back(grad.x);
-                                //new_vertices_3D.push_back(grad.y);
-                                //new_vertices_3D.push_back(grad.z);
+                                auto px = edges[curEdge][1] + Terrain::CHUNK_WIDTH * m;
+                                auto py = edges[curEdge][2];
+                                auto pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * l;
+                                points.push_back(glm::vec3(px, py, pz));
                             }
                             curIndex++;
                         }
