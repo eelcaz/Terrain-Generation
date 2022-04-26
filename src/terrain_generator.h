@@ -19,7 +19,7 @@ public:
     static constexpr double CAVE_INTENSITY = -0.25;
     Terrain(unsigned int seed);
     int** generateChunkHeightMap(int chunkZ, int chunkX);
-    static int* generateChunkHeightMapGpu(int chunkZ, int chunkX);
+    int* generateChunkHeightMapGpu(int chunkZ, int chunkX);
     int*** generateChunkData(int chunkZ, int chunkX);
     int* generateChunkDataGpu(int chunkZ, int chunkX);
     int* generateChunkDataGpuOpt(int chunkZ, int chunkX);

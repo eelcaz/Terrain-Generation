@@ -22,7 +22,7 @@ PerlinNoise3D::PerlinNoise3D() {
         gradientsGPU[i*3 + 1] = z;
         gradientsGPU[i*3 + 2] = x;
     }
-}
+};
 
 PerlinNoise3D::PerlinNoise3D(unsigned int seed) {
     std::mt19937 generator(seed);
@@ -40,7 +40,7 @@ PerlinNoise3D::PerlinNoise3D(unsigned int seed) {
         gradientsGPU[i*3 + 1] = z;
         gradientsGPU[i*3 + 2] = x;
     }
-}
+};
 
 double PerlinNoise3D::interpolate(double a, double b, double weight) {
     if (weight < 0) return a;

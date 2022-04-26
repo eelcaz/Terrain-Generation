@@ -47,7 +47,7 @@ int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
 };
 
 int* Terrain::generateChunkHeightMapGpu(int chunkZ, int chunkX) {
-    return chunkHeightMapKernel(chunkZ, chunkX);
+    return chunkHeightMapKernel(chunkZ, chunkX, noise2D.permutation);
 };
 
 int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
@@ -84,7 +84,7 @@ int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
 };
 
 int* Terrain::generateChunkDataGpu(int chunkZ, int chunkX) {
-    auto heights = chunkHeightMapKernel(chunkZ, chunkX);
+    auto heights = chunkHeightMapKernel(chunkZ, chunkX, noise2D.permutation);
     return chunkDataKernel(chunkZ, chunkX, heights, noise3D.gradientsGPU);
 };
 
