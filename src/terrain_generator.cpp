@@ -105,10 +105,6 @@ int*** Terrain::createEmptyChunkCpu() {
     return chunk;
 };
 
-int* Terrain::createEmptyChunkGpu() {
-    return new int[CHUNK_HEIGHT*CHUNK_WIDTH*CHUNK_WIDTH];
-}
-
 void Terrain::deallocateChunk(int*** &chunk) {
     for (int y = 0; y < CHUNK_HEIGHT; ++y) {
         for (int z = 0; z < CHUNK_WIDTH; ++z) {
