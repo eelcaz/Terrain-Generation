@@ -19,5 +19,9 @@ public:
     static int** generateChunkHeightMap(int chunkZ, int chunkX);
     static int* generateChunkHeightMapGpu(int chunkZ, int chunkX);
     int*** generateChunkData(int chunkZ, int chunkX);
-    static void deallocateChunk(int ***chunk);
+    int* generateChunkDataGpu(int chunkZ, int chunkX);
+    int* generateChunkDataGpuOpt(int chunkZ, int chunkX);
+    int*** createEmptyChunkCpu();
+    int* createEmptyChunkGpu();
+    static void deallocateChunk(int*** &chunk);
 };

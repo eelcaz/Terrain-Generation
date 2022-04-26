@@ -50,13 +50,7 @@ int* Terrain::generateChunkHeightMapGpu(int chunkZ, int chunkX) {
 
 int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
     // allocate data for whole chunk, zero initialized
-    int ***chunk = new int**[CHUNK_HEIGHT];
-    for (int y = 0; y < CHUNK_HEIGHT; ++y) {
-        chunk[y] = new int*[CHUNK_WIDTH];
-        for (int z = 0; z < CHUNK_WIDTH; ++z) {
-            chunk[y][z] = new int[CHUNK_WIDTH]{0};
-        }
-    }
+    int ***chunk = Terrain::createEmptyChunkCpu();
 
     auto heightMap = generateChunkHeightMap(chunkZ, chunkX);
     // solid parts of chunk will have value of 1, otherwise 0
@@ -88,7 +82,31 @@ int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
     return chunk;
 };
 
-void Terrain::deallocateChunk(int*** chunk) {
+int* Terrain::generateChunkDataGpu(int chunkZ, int chunkX) {
+    return new int[1];
+};
+
+int* Terrain::generateChunkDataGpuOpt(int chunkZ, int chunkX) {
+    return new int[1];
+};
+
+int*** Terrain::createEmptyChunkCpu() {
+    // allocate data for whole chunk, zero initialized
+    int ***chunk = new int**[CHUNK_HEIGHT];
+    for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+        chunk[y] = new int*[CHUNK_WIDTH];
+        for (int z = 0; z < CHUNK_WIDTH; ++z) {
+            chunk[y][z] = new int[CHUNK_WIDTH]{0};
+        }
+    }
+    return chunk;
+};
+
+int* Terrain::createEmptyChunkGpu() {
+    return new int[CHUNK_HEIGHT*CHUNK_WIDTH*CHUNK_WIDTH];
+}
+
+void Terrain::deallocateChunk(int*** &chunk) {
     for (int y = 0; y < CHUNK_HEIGHT; ++y) {
         for (int z = 0; z < CHUNK_WIDTH; ++z) {
             delete[] chunk[y][z];
