@@ -166,13 +166,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="chunkGen.h" />
     <ClInclude Include="shaders.h" />
     <ClInclude Include="heightMapGen.h" />
     <ClInclude Include="perlin_noise.h" />
     <ClInclude Include="perlin_noise_3d.h" />
+    <ClInclude Include="tables.h" />
     <ClInclude Include="terrain_generator.h" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="chunkGen.cu" />
     <CudaCompile Include="heightMapGen.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
