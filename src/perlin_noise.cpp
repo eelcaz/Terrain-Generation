@@ -3,7 +3,26 @@
 #include <math.h>
 #include <iostream>
 #include <iomanip>
+#include <random>
+#include <functional>
 
+PerlinNoise::PerlinNoise() {
+    std::mt19937 generator(0);
+    std::uniform_real_distribution<> distribution(0, tableSize);
+    auto dice = std::bind(distribution, generator);
+    for (unsigned i = 0; i < tableSize; ++i) {
+        permutation[i] = dice();
+    }
+}
+
+PerlinNoise::PerlinNoise(unsigned int seed) {
+    std::mt19937 generator(seed);
+    std::uniform_real_distribution<> distribution(0, tableSize);
+    auto dice = std::bind(distribution, generator);
+    for (unsigned i = 0; i < tableSize; ++i) {
+        permutation[i] = dice();
+    }
+};
 
 double PerlinNoise::interpolate(double a, double b, double weight) {
     if (weight < 0) return a;
@@ -12,7 +31,7 @@ double PerlinNoise::interpolate(double a, double b, double weight) {
 };
 
 Vector2 PerlinNoise::randomGradient(int z, int x) {
-    int randDir = PERMUTATION[(PERMUTATION[abs(z) % 256] + abs(x)) % 256];
+    int randDir = permutation[(permutation[abs(z) % 256] + abs(x)) % 256];
     Vector2 v = {
         (float)cos(randDir),    // z
         (float)sin(randDir)     // x

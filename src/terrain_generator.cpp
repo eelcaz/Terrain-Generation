@@ -6,7 +6,6 @@
 #include "terrain_generator.h"
 #include "heightMapGen.h"
 #include "chunkGen.h"
-#include "perlin_noise.h"
 
 double Terrain::fbmNoise(double z, double x, int octaves) {
     double total = 0.0;
@@ -14,13 +13,15 @@ double Terrain::fbmNoise(double z, double x, int octaves) {
     for (int i = 0; i < octaves; ++i) {
         double amplitude = pow(0.58f, i);
         double frequency = pow(2.0f, i);
-        total += PerlinNoise::noise(z*frequency, x*frequency) * amplitude;
+        total += noise2D.noise(z*frequency, x*frequency) * amplitude;
         maxVal += amplitude;
     }
     return total/maxVal;
 };
 
-Terrain::Terrain(unsigned int seed) : noise3D(PerlinNoise3D(seed)) {};
+Terrain::Terrain(unsigned int seed) :
+    noise2D(PerlinNoise(seed)),
+    noise3D(PerlinNoise3D(seed)) {};
 
 int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
     // allocate new chunk heightmap
