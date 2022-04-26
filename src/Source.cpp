@@ -215,9 +215,9 @@ int main(int argc, char** argv) {
                             std::vector<glm::vec3> points(0);
                             for (int ij = 0; ij < 3; ij++) {
                                 auto curEdge = triangles[iterate * 3 + ij];
-                                auto px = edges[curEdge][1] + Terrain::CHUNK_WIDTH * m;
+                                auto px = edges[curEdge][1] + (Terrain::CHUNK_WIDTH-1) * m;
                                 auto py = edges[curEdge][2];
-                                auto pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * l;
+                                auto pz = edges[curEdge][0] + (Terrain::CHUNK_WIDTH-1) * l;
                                 points.push_back(glm::vec3(px, py, pz));
                                 new_vertices_3D.push_back(px);
                                 new_vertices_3D.push_back(py);
