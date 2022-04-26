@@ -180,10 +180,20 @@ int main(int argc, char** argv) {
                         //grad.y = thing(j, k + 1, i, l, m, terrain) - thing(j, k - 1, i, l, m, terrain);
                         //grad.z = thing(j, k, i + 1, l, m, terrain) - thing(j, k, i - 1, l, m, terrain);
                         //grad = -normalize(grad);
+#if VERSION == 1 || VERSION == 2
+                        int k_d = k_ + d*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
+                        int i_d = i_ + d*Terrain::CHUNK_WIDTH;
+                        int j_d = j_ + d;
+                        grad.x = chunk[k_  + i_  + j_d] - chunk[k_ + i_ + j_];
+                        grad.y = chunk[k_d + i_  + j_ ] - chunk[k_ + i_ + j_];
+                        grad.z = chunk[k_  + i_d + j_ ] - chunk[k_ + i_ + j_];
+                        grad = -normalize(grad);
+#else
                         grad.x = chunk[k][i][j + d] - chunk[k][i][j];
                         grad.y = chunk[k + d][i][j] - chunk[k][i][j];
                         grad.z = chunk[k][i + d][j] - chunk[k][i][j];
                         grad = -normalize(grad);
+#endif
 
                         for (int iterate = 0; iterate < numTriangles; iterate++) {
                             std::vector<glm::vec3> points(0);
