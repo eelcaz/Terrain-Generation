@@ -50,12 +50,6 @@ int main(int argc, char** argv) {
     std::cout << "In CPU implementation" << std::endl;
 #endif
 
-    auto heights = new int *[NUM_CHUNKS];
-    for (int i = 0; i < NUM_CHUNKS; ++i) {
-        heights[i] = Terrain::generateChunkHeightMapGpu(i-NUM_CHUNKS/2, 0);
-    }
-
-
     glfwInit();
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
