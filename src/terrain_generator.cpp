@@ -31,10 +31,10 @@ int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
 
     for (int z = 0; z < CHUNK_WIDTH; ++z) {
         for (int x = 0; x < CHUNK_WIDTH; ++x) {
-            double offset = (double)1/(2*CHUNK_WIDTH);
+            double offset = (double)1/(2*(CHUNK_WIDTH-1));
             double val = fbmNoise(
-                (chunkZ + offset + (double)z/CHUNK_WIDTH)/TERRAIN_ZOOM,
-                (chunkX + offset + (double)x/CHUNK_WIDTH)/TERRAIN_ZOOM,
+                (chunkZ - offset + (double)z/(CHUNK_WIDTH-1))/TERRAIN_ZOOM,
+                (chunkX - offset + (double)x/(CHUNK_WIDTH-1))/TERRAIN_ZOOM,
                 6
             );
             val = (val + 1) / 2;
@@ -63,14 +63,13 @@ int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
         }
     }
 
-    // this is here just to test that the 3D perlin noise works
     for (int y = 0; y < CHUNK_HEIGHT; ++y) {
         for (int z = 0; z < CHUNK_WIDTH; ++z) {
             for (int x = 0; x < CHUNK_WIDTH; ++x) {
-                double offset = (double)1/(2*CHUNK_WIDTH);
+                double offset = (double)1/(2*(CHUNK_WIDTH-1));
                 double fy = ((int)floor(y/CHUNK_WIDTH))+ offset + ((double)(y%CHUNK_WIDTH))/CHUNK_WIDTH;
-                double fz = (chunkZ + offset + (double)z/CHUNK_WIDTH);
-                double fx = (chunkX + offset + (double)x/CHUNK_WIDTH);
+                double fz = (chunkZ - offset + (double)z/(CHUNK_WIDTH-1));
+                double fx = (chunkX - offset + (double)x/(CHUNK_WIDTH-1));
                 double val = noise3D.noise(fy*Terrain::CAVE_ZOOM,
                                            fz*Terrain::CAVE_ZOOM,
                                            fx*Terrain::CAVE_ZOOM);

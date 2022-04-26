@@ -297,9 +297,9 @@ int main(int argc, char** argv) {
                             int curTriangle = 18 * iterate;
                             for (int ij = 0; ij < 3; ij++) {
                                 auto curEdge = triangles[iterate * 3 + ij];
-                                auto px = edges[curEdge][1] + Terrain::CHUNK_WIDTH * m;
+                                auto px = edges[curEdge][1] + (Terrain::CHUNK_WIDTH-1) * m;
                                 auto py = edges[curEdge][2];
-                                auto pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * l;
+                                auto pz = edges[curEdge][0] + (Terrain::CHUNK_WIDTH-1) * l;
                                 //new_vertices_3D.push_back(px);
                                 //new_vertices_3D.push_back(py);
                                 //new_vertices_3D.push_back(pz);
@@ -340,7 +340,7 @@ int main(int argc, char** argv) {
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3*sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3*sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
 
