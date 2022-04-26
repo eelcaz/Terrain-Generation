@@ -16,30 +16,23 @@
 
 #define NUM_CHUNKS 8
 #define SEED 2022
-// location = 0 bc of attrib pointer
-
-
-
+/*
+double thing(int x, int y, int z, int l, int m, Terrain terrain) {
+    double offset = (double)1 / (2 * Terrain::CHUNK_WIDTH);
+    double fy = ((int)floor(y / Terrain::CHUNK_WIDTH)) + offset + ((double)(y % Terrain::CHUNK_WIDTH)) / Terrain::CHUNK_WIDTH;
+    double fz = (l + offset + (double)z / Terrain::CHUNK_WIDTH);
+    double fx = (m + offset + (double)x / Terrain::CHUNK_WIDTH);
+    double val = terrain.noise3D.noise(fy * Terrain::CAVE_ZOOM,
+        fz * Terrain::CAVE_ZOOM,
+        fx * Terrain::CAVE_ZOOM);
+    return val;
+}
+*/
 int main(int argc, char** argv) {
     int i = 0;
     int j = 0;
     int k = 0;
 
-    // // generate NUM_CHUNKS heightmaps
-    // auto heights = new int **[NUM_CHUNKS];
-    // for (int i = 0; i < NUM_CHUNKS; ++i) {
-    //     heights[i] = Terrain::generateChunkHeightMap(i-NUM_CHUNKS/2, 0);
-    // }
-
-    // call kernel
-    // auto chunk = chunkHeightMapKernel(0, 0);
-    // for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
-    //     for (int x = 0; x < Terrain::CHUNK_WIDTH; ++x) {
-    //         std::cout << chunk[z*Terrain::CHUNK_WIDTH + x] << " ";
-    //     }
-    //     std::cout << "\n";
-    // }
-    // delete[] chunk;
     auto heights = new int *[NUM_CHUNKS];
     for (int i = 0; i < NUM_CHUNKS; ++i) {
         heights[i] = Terrain::generateChunkHeightMapGpu(i-NUM_CHUNKS/2, 0);
@@ -79,35 +72,9 @@ int main(int argc, char** argv) {
     // link shaders and start it up
     if((res = linkShaders()) == -1) return res;
 
-    // vertex data loading -- posx, posy, posz, r, g, b
-    std::vector<GLfloat> vertices_3D(0);
-    std::vector<GLfloat> vertices_3D_caves(0);
+    // vertex data loading -- posx, posy, posz
     int l;
     int m;
-    /*
-    // k = y, i = z, j = x; pushed as (x, y, z)
-    for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
-        for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
-            auto D_chunks = Terrain::generateChunkData(l, m);
-            for (k = 0; k < Terrain::CHUNK_HEIGHT; k++) {
-                for (i = 0; i < Terrain::CHUNK_WIDTH; i++) {
-                    for (j = 0; j < Terrain::CHUNK_WIDTH; j++) {
-                        if (D_chunks[k][i][j] == 1) {
-                            vertices_3D.push_back((j + Terrain::CHUNK_WIDTH * m));
-                            vertices_3D.push_back(k/2.0);
-                            vertices_3D.push_back((i + Terrain::CHUNK_WIDTH * l));
-                        }
-                        else {
-                            vertices_3D_caves.push_back((j + Terrain::CHUNK_WIDTH * m));
-                            vertices_3D_caves.push_back(k/2.0);
-                            vertices_3D_caves.push_back((i + Terrain::CHUNK_WIDTH * l));
-                        }
-                    }
-                }
-            }
-        }
-    }
-    */
     Terrain terrain(SEED);
     std::vector<GLfloat> new_vertices_3D(0);
     std::vector<glm::vec3> normals(0);
@@ -155,6 +122,19 @@ int main(int argc, char** argv) {
                             {i + 1.0, j + 0.5, k + 0.0}     // e11
                         };
                         //std::cout << numVerts;
+                        int d = 1;
+                        glm::vec3 grad(0.0f, 0.0f, 0.0f);
+                        //auto abc = terrain.noise3D.randomGradient(k, i, j);
+                        //grad = -normalize(glm::vec3(abc.x, abc.y, abc.z));
+                        //grad.x = thing(j + 1, k, i, l, m, terrain) - thing(j - 1, k, i, l, m, terrain);
+                        //grad.y = thing(j, k + 1, i, l, m, terrain) - thing(j, k - 1, i, l, m, terrain);
+                        //grad.z = thing(j, k, i + 1, l, m, terrain) - thing(j, k, i - 1, l, m, terrain);
+                        //grad = -normalize(grad);
+                        grad.x = chunk[k][i][j + d] - chunk[k][i][j];
+                        grad.y = chunk[k + d][i][j] - chunk[k][i][j];
+                        grad.z = chunk[k][i + d][j] - chunk[k][i][j];
+                        grad = -normalize(grad);
+
                         for (int iterate = 0; iterate < numTriangles; iterate++) {
                             std::vector<glm::vec3> points(0);
                             for (int ij = 0; ij < 3; ij++) {
@@ -164,15 +144,15 @@ int main(int argc, char** argv) {
                                 auto pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * l;
                                 points.push_back(glm::vec3(px, py, pz));
                             }
-                            auto normal = glm::normalize(glm::cross(points[0], points[1]));
+                            //auto normal = glm::normalize(glm::cross(points[0], points[1]));
                             for (int ij = 0; ij < 3; ij++) {
                                 auto point = points[ij];
                                 new_vertices_3D.push_back(points[ij].x);
                                 new_vertices_3D.push_back(points[ij].y);
                                 new_vertices_3D.push_back(points[ij].z);
-                                new_vertices_3D.push_back(normal.x);
-                                new_vertices_3D.push_back(normal.y);
-                                new_vertices_3D.push_back(normal.z);
+                                new_vertices_3D.push_back(grad.x);
+                                new_vertices_3D.push_back(grad.y);
+                                new_vertices_3D.push_back(grad.z);
 
                             }
                         }
@@ -182,59 +162,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    /*
-    std::vector<GLfloat> vertices(Terrain::CHUNK_WIDTH* Terrain::CHUNK_WIDTH* NUM_CHUNKS * 3);
-    std::vector<GLuint> elements((Terrain::CHUNK_WIDTH)*(Terrain::CHUNK_WIDTH-1)*NUM_CHUNKS*3*2);
-
-    for (k = 0; k < NUM_CHUNKS; k++) {
-        for (i = 0; i < Terrain::CHUNK_WIDTH; i++) {
-            for (j = 0; j < Terrain::CHUNK_WIDTH; j++) {
-                unsigned int cur = k * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH * 3 + i * Terrain::CHUNK_WIDTH * 3 + j * 3;
-                vertices[cur + 0] = i - Terrain::CHUNK_WIDTH / 2.0f + k * Terrain::CHUNK_WIDTH;
-                vertices[cur + 2] = -j;
-                vertices[cur + 1] = heights[k][i*Terrain::CHUNK_WIDTH + j];
-            }
-        }
-    }
-
-    l = 0;
-    for (k = 0; k < NUM_CHUNKS; k++) {
-        for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
-            for (i = 0; i < Terrain::CHUNK_WIDTH-1; i++) {
-                int vertIndex = k * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH + i * Terrain::CHUNK_WIDTH + j;
-
-                elements[l++] = vertIndex;
-                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH;
-                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH+1;
-                elements[l++] = vertIndex;
-                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH+1;
-                elements[l++] = vertIndex + 1;
-            }
-            if (k < NUM_CHUNKS - 1) {
-                int vertIndex = k * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH + i * Terrain::CHUNK_WIDTH + j;
-
-                elements[l++] = vertIndex;
-                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH;
-                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH + 1;
-                elements[l++] = vertIndex;
-                elements[l++] = vertIndex + Terrain::CHUNK_WIDTH + 1;
-                elements[l++] = vertIndex + 1;
-            }
-        }
-    }
-
-    GLfloat second_verts[] = {
-        -50.0f, 0.0f, -50.0f,
-        50.0f, 0.0f, -50.0f,
-        50.0f, 0.0f, 50.0f,
-        -50.0f, 0.0f, 50.0f
-    };
-    GLuint second_elements[] = {
-        0, 1, 2,
-        0, 3, 2
-    };
-    */
-
     // VBO for Land Points
     GLuint VBOP;
     glGenBuffers(1, &VBOP);
@@ -243,79 +170,14 @@ int main(int argc, char** argv) {
     glBindVertexArray(VAOP);
     glBindBuffer(GL_ARRAY_BUFFER, VBOP);
     glBufferData(GL_ARRAY_BUFFER, new_vertices_3D.size() * sizeof(GLfloat), &new_vertices_3D[0], GL_STATIC_DRAW);
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(1);
+
     glBindVertexArray(0);
-    /*
-    // VBO for Cave Points
-    GLuint VBOP2;
-    glGenBuffers(1, &VBOP2);
-    GLuint VAOP2;
-    glGenVertexArrays(1, &VAOP2);
-    glBindVertexArray(VAOP2);
-    glBindBuffer(GL_ARRAY_BUFFER, VBOP2);
-    glBufferData(GL_ARRAY_BUFFER, vertices_3D_caves.size() * sizeof(GLfloat), &vertices_3D_caves[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
-    glEnableVertexAttribArray(0);
-    glBindVertexArray(0);
-    */
-
-    /*
-    // VBO for the "chunk strip"
-    GLuint VBO;
-    glGenBuffers(1, &VBO);
-
-    GLuint EBO;
-    glGenBuffers(1, &EBO);
-
-    GLuint VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements.size() * sizeof(GLuint), &elements[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
-    glBindVertexArray(0);
-
-    // VBO for "ground"
-    GLuint VBO2;
-    glGenBuffers(1, &VBO2);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(second_verts), second_verts, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // unbinding is just binding to 0 ; vao handles this
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    GLuint EBO2;
-    glGenBuffers(1, &EBO2);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(second_elements), second_elements, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    GLuint VAO2;
-    glGenVertexArrays(1, &VAO2);
-    glBindVertexArray(VAO2);
-
-    // getting ready to send to shader
-    // first param is index, second param is number of indices
-    // third is type, fourth is for normalization
-    // fifth is stride of bytes to move between each vertex
-    // sixth is pointer to the first element ; in some cases u can ignore void, dunno why
-    glBindBuffer(GL_ARRAY_BUFFER, VBO2);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO2);
-    glBindVertexArray(0);
-    */
-
-    glUseProgram(shaderProgram);
-    glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), 1.0f, 0.5f, 0.5f);
-    glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), cameraPos.x, cameraPos.y, cameraPos.z);
-    glUniform3f(glGetUniformLocation(shaderProgram, "lightDir"), cameraFront.x, cameraFront.y, cameraFront.z);
-    glUseProgram(0);
+    
 
     glm::mat4 Projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
     //glm::mat4 Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f);
@@ -328,8 +190,8 @@ int main(int argc, char** argv) {
 
     GLuint MatrixID = glGetUniformLocation(shaderProgram, "MVP");
     GLuint ModelMatrixID = glGetUniformLocation(shaderProgram, "model");
-    GLuint ViewMatrixID = glGetUniformLocation(shaderProgram, "view");
-
+    GLuint ColorID = glGetUniformLocation(shaderProgram, "u_color");
+    GLuint LightID = glGetUniformLocation(shaderProgram, "u_reverseLightDirection");
 
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -338,61 +200,35 @@ int main(int argc, char** argv) {
     glm::vec3 sky = glm::vec3(140.0f, 189.0f, 214.0f) / 255.0f;
     glm::vec3 dirt = glm::vec3(155.0f, 118.0f, 83.0f) / 255.0f;
     glm::vec3 grass = glm::vec3(86.0f, 125.0f, 70.0f) / 255.0f;
+    auto thing = glm::normalize(glm::vec3(0.0, 1.0, 0.0));
+    
+
     glClearColor(sky.x, sky.y, sky.z, 0.0f);
     glPointSize(10);
+    
     do {
         processInput(window);
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
-        //float red = sin(glfwGetTime());
-        //float green = sin(glfwGetTime()/2);
-        //float blue = sin(glfwGetTime()*0.9);
-        //glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), red, green, blue);
-
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // startup
         glUseProgram(shaderProgram);
-        glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), cameraPos.x, cameraPos.y, cameraPos.z);
-        glUniform3f(glGetUniformLocation(shaderProgram, "lightDir"), cameraFront.x, cameraFront.y, cameraFront.z);
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &Model[0][0]);
-        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &View[0][0]);
-        // draw the triangle, index 0, 3 vertices
-        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        //glDrawArrays(GL_TRIANGLES, 0, 3); // could to GL_POINTS, GL_LINE_STRIP
-        /*
-        glBindVertexArray(VAO);
-        glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), grass.x, grass.y, grass.z);
-        glDrawElements(GL_TRIANGLES, elements.size(), GL_UNSIGNED_INT, 0);
-        //glDrawArrays(GL_TRIANGLE_STRIP, 0, 16*16*2);
-        glBindVertexArray(0);
-        glBindVertexArray(VAO2);
-        //glDrawElements(GL_TRIANGLES, sizeof(second_elements) / sizeof(elements[0]), GL_UNSIGNED_INT, 0);
-        glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), dirt.x, dirt.y, dirt.z);
-        glDrawElements(GL_TRIANGLES, sizeof(second_elements) / sizeof(second_elements[0]), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-        */
+        glUniform3f(ColorID, grass.x, grass.y, grass.z);
+        glUniform3f(LightID, thing.x, thing.y, thing.z);
+        
         glBindVertexArray(VAOP);
         glPointSize(10);
-        glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), grass.x, grass.y, grass.z);
-        glDrawArrays(GL_TRIANGLES, 0, new_vertices_3D.size());
+        glDrawArrays(GL_TRIANGLES, 0, new_vertices_3D.size()/2);
         glBindVertexArray(0);
 
-        /*
-        glBindVertexArray(VAOP2);
-        glPointSize(50);
-        glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), dirt.x, dirt.y, dirt.z);
-        glDrawArrays(GL_POINTS, 0, vertices_3D_caves.size());
-        glBindVertexArray(0);
-        */
 
         View = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         mvp = Projection * View * Model;
-        //glBindVertexArray(0);
-        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         // double buffering setup
         glfwSwapBuffers(window);
@@ -400,17 +236,10 @@ int main(int argc, char** argv) {
         glfwPollEvents();
 
     } while (!glfwWindowShouldClose(window));
-    /*
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &VBO2);
-    glDeleteShader(planeVS);
-    glDeleteShader(planeFS);
-    glDeleteBuffers(1, &EBO);
-    glDeleteBuffers(1, &EBO2);
-    */
+    
+    glDeleteBuffers(1, &VAOP);
     glDeleteBuffers(1, &VBOP);
-    //glDeleteBuffers(1, &VBOP2);
-
+    
     glfwDestroyWindow(window);
     glfwTerminate();
     return EXIT_SUCCESS;
