@@ -84,7 +84,8 @@ int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
 };
 
 int* Terrain::generateChunkDataGpu(int chunkZ, int chunkX) {
-    return chunkDataKernel(chunkZ, chunkX, noise3D.gradientsGPU);
+    auto heights = chunkHeightMapKernel(chunkZ, chunkX);
+    return chunkDataKernel(chunkZ, chunkX, heights, noise3D.gradientsGPU);
 };
 
 
