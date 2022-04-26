@@ -12,12 +12,13 @@
 #include <shaders.h>
 #include <camera.h>
 #include <tables.h>
+#include <time.h>
 
 
 #define NUM_CHUNKS 8
 #define SEED 2022
 // VERSION: 0 = CPU, 1 = GPU, 2 = GPU Optimized
-#define VERSION 1
+#define VERSION 0
 
 /*
 double thing(int x, int y, int z, int l, int m, Terrain terrain) {
@@ -93,9 +94,14 @@ int main(int argc, char** argv) {
     int m;
     Terrain terrain(SEED);
     std::vector<GLfloat> new_vertices_3D(0);
+#if VERSION == 1 || VERSION == 2
+    std::vector<int*> chunks(0);
+#else
     std::vector<int***> chunks(0);
+#endif
     for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
         for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
+
 #if VERSION == 1
             auto chunk = terrain.generateChunkDataGpu(l, m);
 #elif VERSION == 2
@@ -103,13 +109,21 @@ int main(int argc, char** argv) {
 #else
             auto chunk = terrain.generateChunkData(l, m);
 #endif
+            chunks.push_back(chunk);
+        }
+    }
+    clock_t begin = clock();
+    for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
+        for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
+
             for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
                 for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
-
+                        
                         int b = 0;
 
 #if VERSION == 1 || VERSION == 2
+                        int* chunk = chunks[(m + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + l + Terrain::NUM_CHUNKS_SIDE];
                         // flat array indexing for gpu returned chunks
                         int k_ = k*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
                         int k_1 = k_ + Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
@@ -135,6 +149,7 @@ int main(int argc, char** argv) {
 
 #else
                         // 3D array indexing for cpu returned chunks
+                        auto chunk = chunks[(m + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + l + Terrain::NUM_CHUNKS_SIDE];
                         b += chunk[k][i + 1][j + 1];    // v7
                         b <<= 1;
                         b += chunk[k + 1][i + 1][j + 1];    // v6
@@ -218,6 +233,10 @@ int main(int argc, char** argv) {
             }
         }
     }
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    //time_spent *= 1000.0; // seconds to milliseconds
+    std::cout << time_spent << std::endl;
     if (new_vertices_3D.size() == 0) {
         std::cerr << "UH OH NO VERTICES" << std::endl;
         return -1;
