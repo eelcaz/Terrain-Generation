@@ -59,12 +59,12 @@ __global__ void chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* 
 
 
     // noise coordinates
-    double offset = (double)1/(2*Terrain::CHUNK_WIDTH);
+    double offset = (double)1/(2*(Terrain::CHUNK_WIDTH-1));
     double y = (_y/Terrain::CHUNK_WIDTH)
         + offset
         + ((double)(_y%Terrain::CHUNK_WIDTH))/Terrain::CHUNK_WIDTH;
-    double z = (chunkZ + offset + (double)_z/Terrain::CHUNK_WIDTH);
-    double x = (chunkX + offset + (double)_x/Terrain::CHUNK_WIDTH);
+    double z = (chunkZ + offset + (double)_z/(Terrain::CHUNK_WIDTH-1));
+    double x = (chunkX + offset + (double)_x/(Terrain::CHUNK_WIDTH-1));
 
     int yGrid0 = (int)floor(y);
     int zGrid0 = (int)floor(z);
