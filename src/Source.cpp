@@ -106,8 +106,6 @@ int main(int argc, char** argv) {
             for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
                 for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
-                        unsigned int curVoxel = k * sizeOfPlane + i*(Terrain::CHUNK_WIDTH-1)+j;
-                        unsigned int curIndex = curChunk + curVoxel;
 
                         int b = 0;
 
@@ -206,8 +204,14 @@ int main(int argc, char** argv) {
                                 auto py = edges[curEdge][2];
                                 auto pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * l;
                                 points.push_back(glm::vec3(px, py, pz));
+                                new_vertices_3D.push_back(px);
+                                new_vertices_3D.push_back(py);
+                                new_vertices_3D.push_back(pz);
+                                new_vertices_3D.push_back(grad.x);
+                                new_vertices_3D.push_back(grad.y);
+                                new_vertices_3D.push_back(grad.z);
+
                             }
-                            curIndex++;
                         }
                     }
                 }
