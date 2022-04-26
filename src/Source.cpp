@@ -77,13 +77,30 @@ int main(int argc, char** argv) {
     int m;
     Terrain terrain(SEED);
     std::vector<GLfloat> new_vertices_3D(0);
-    std::vector<glm::vec3> normals(0);
+    std::vector<int***> chunks(0);
     for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
         for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
-            auto chunk = terrain.generateChunkData(l, m);
+            chunks.push_back(terrain.generateChunkData(l, m));
+        }
+    }
+    unsigned long int totalChunkCount = 4 * Terrain::NUM_CHUNKS_SIDE * Terrain::NUM_CHUNKS_SIDE;
+    unsigned long int pointCount = (Terrain::CHUNK_HEIGHT - 1) * (Terrain::CHUNK_WIDTH - 1) * (Terrain::CHUNK_WIDTH - 1);
+    unsigned long int maxTriangleCount = 5;
+    unsigned long int pointsPerTriangle = 6 * 3; // vx, vy, vz, nx, ny, nz for 3 vertices
+    unsigned long int size = totalChunkCount * pointCount * maxTriangleCount * pointsPerTriangle;
+    unsigned long int sizeOfChunk = pointCount * maxTriangleCount * pointsPerTriangle;
+    unsigned long int sizeOfPlane = (Terrain::CHUNK_WIDTH - 1) * (Terrain::CHUNK_WIDTH - 1);
+    GLfloat* vertices_3D = (GLfloat *) calloc(size, sizeof(GLfloat));
+    for (m = 0; m < 2 * Terrain::NUM_CHUNKS_SIDE; m++) {
+        for (l = 0; l < 2 * Terrain::NUM_CHUNKS_SIDE; l++) {
+            auto chunk = terrain.generateChunkData(l - Terrain::NUM_CHUNKS_SIDE, m - Terrain::NUM_CHUNKS_SIDE);
+            unsigned int curChunk = m * sizeOfChunk * sizeOfChunk + l * sizeOfChunk;
             for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
                 for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
+                        unsigned int curVoxel = k * sizeOfPlane + i*(Terrain::CHUNK_WIDTH-1)+j;
+                        unsigned int curIndex = curChunk + curVoxel;
+
                         int b = 0;
                         b += chunk[k][i + 1][j + 1];    // v7
                         b <<= 1;
@@ -136,32 +153,36 @@ int main(int argc, char** argv) {
                         grad = -normalize(grad);
 
                         for (int iterate = 0; iterate < numTriangles; iterate++) {
-                            std::vector<glm::vec3> points(0);
+                            
                             for (int ij = 0; ij < 3; ij++) {
                                 auto curEdge = triangles[iterate * 3 + ij];
-                                auto px = edges[curEdge][1] + Terrain::CHUNK_WIDTH * m;
-                                auto py = edges[curEdge][2];
-                                auto pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * l;
-                                points.push_back(glm::vec3(px, py, pz));
+                                GLfloat px = edges[curEdge][1] + Terrain::CHUNK_WIDTH * (m-Terrain::NUM_CHUNKS_SIDE);
+                                GLfloat py = edges[curEdge][2];
+                                GLfloat pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * (l-Terrain::NUM_CHUNKS_SIDE);
+                                vertices_3D[curIndex * 6] = px;
+                                vertices_3D[curIndex * 6 + 1] = py;
+                                vertices_3D[curIndex * 6 + 2] = pz;
+                                vertices_3D[curIndex * 6 + 3] = grad.x;
+                                vertices_3D[curIndex * 6 + 4] = grad.y;
+                                vertices_3D[curIndex * 6 + 5] = grad.z;
+                                //new_vertices_3D.push_back(px);
+                                //new_vertices_3D.push_back(py);
+                                //new_vertices_3D.push_back(pz);
+                                //new_vertices_3D.push_back(grad.x);
+                                //new_vertices_3D.push_back(grad.y);
+                                //new_vertices_3D.push_back(grad.z);
                             }
-                            //auto normal = glm::normalize(glm::cross(points[0], points[1]));
-                            for (int ij = 0; ij < 3; ij++) {
-                                auto point = points[ij];
-                                new_vertices_3D.push_back(points[ij].x);
-                                new_vertices_3D.push_back(points[ij].y);
-                                new_vertices_3D.push_back(points[ij].z);
-                                new_vertices_3D.push_back(grad.x);
-                                new_vertices_3D.push_back(grad.y);
-                                new_vertices_3D.push_back(grad.z);
-
-                            }
+                            curIndex++;
                         }
                     }
                 }
             }
         }
     }
-
+    if (new_vertices_3D.size() == 0) {
+        std::cerr << "UH OH NO VERTICES" << std::endl;
+        return -1;
+    }
     // VBO for Land Points
     GLuint VBOP;
     glGenBuffers(1, &VBOP);
