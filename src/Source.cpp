@@ -16,6 +16,9 @@
 
 #define NUM_CHUNKS 8
 #define SEED 2022
+// VERSION: 0 = CPU, 1 = GPU, 2 = GPU Optimized
+#define VERSION 1
+
 /*
 double thing(int x, int y, int z, int l, int m, Terrain terrain) {
     double offset = (double)1 / (2 * Terrain::CHUNK_WIDTH);
@@ -28,10 +31,23 @@ double thing(int x, int y, int z, int l, int m, Terrain terrain) {
     return val;
 }
 */
+
+// location = 0 bc of attrib pointer
+
+
+
 int main(int argc, char** argv) {
     int i = 0;
     int j = 0;
     int k = 0;
+
+#if VERSION == 1
+    std::cout << "In GPU implementation" << std::endl;
+#elif VERSION == 2
+    std::cout << "In Optimized GPU implementtation" << std::endl;
+#else
+    std::cout << "In CPU implementation" << std::endl;
+#endif
 
     auto heights = new int *[NUM_CHUNKS];
     for (int i = 0; i < NUM_CHUNKS; ++i) {
@@ -80,11 +96,44 @@ int main(int argc, char** argv) {
     std::vector<glm::vec3> normals(0);
     for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
         for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
+#if VERSION == 1
+            auto chunk = terrain.generateChunkDataGpu(l, m);
+#elif VERSION == 2
+            auto chunk = terrain.generateChunkDataGpu(l, m);
+#else
             auto chunk = terrain.generateChunkData(l, m);
+#endif
             for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
                 for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
                         int b = 0;
+
+#if VERSION == 1 || VERSION == 2
+                        // flat array indexing for gpu returned chunks
+                        int k_ = k*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
+                        int k_1 = k_ + Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
+                        int i_ = i*Terrain::CHUNK_WIDTH;
+                        int i_1 = i_ + Terrain::CHUNK_WIDTH;
+                        int j_ = j;
+                        int j_1 = j_ + 1;
+                        b += chunk[k_  + i_1 + j_1]; // v7
+                        b <<= 1;
+                        b += chunk[k_1 + i_1 + j_1]; // v6
+                        b <<= 1;
+                        b += chunk[k_1 + i_  + j_1]; // v5
+                        b <<= 1;
+                        b += chunk[k_  + i_  + j_1]; // v4
+                        b <<= 1;
+                        b += chunk[k_  + i_1 + j_ ]; // v3
+                        b <<= 1;
+                        b += chunk[k_1 + i_1 + j_ ]; // v2
+                        b <<= 1;
+                        b += chunk[k_1 + i_  + j_ ]; // v1
+                        b <<= 1;
+                        b += chunk[k_ + i_ + j_]; // v0
+
+#else
+                        // 3D array indexing for cpu returned chunks
                         b += chunk[k][i + 1][j + 1];    // v7
                         b <<= 1;
                         b += chunk[k + 1][i + 1][j + 1];    // v6
@@ -100,6 +149,7 @@ int main(int argc, char** argv) {
                         b += chunk[k + 1][i][j];    // v1
                         b <<= 1;
                         b += chunk[k][i][j];    // v0
+#endif
 
                         unsigned int e = edgeTable[b];
                         unsigned int numTriangles = case_to_numpolys[b];
