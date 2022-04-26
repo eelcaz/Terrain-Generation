@@ -18,7 +18,7 @@
 #define NUM_CHUNKS 8
 #define SEED 2022
 // VERSION: 0 = CPU, 1 = GPU, 2 = GPU Optimized
-#define VERSION 0
+#define VERSION 1
 
 /*
 double thing(int x, int y, int z, int l, int m, Terrain terrain) {
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     int l;
     int m;
     Terrain terrain(SEED);
-    std::vector<GLfloat> new_vertices_3D(0);
+    //std::vector<GLfloat> new_vertices_3D(0);
 #if VERSION == 1 || VERSION == 2
     std::vector<int*> chunks(0);
 #else
@@ -112,14 +112,97 @@ int main(int argc, char** argv) {
             chunks.push_back(chunk);
         }
     }
-    clock_t begin = clock();
-    for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
-        for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
-
+    
+    size_t num = 0;
+    for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
+        for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
+            //size_t curChunk = chunkSize * 2 * Terrain::NUM_CHUNKS_SIDE * (l + Terrain::NUM_CHUNKS_SIDE) + chunkSize * (m + Terrain::NUM_CHUNKS_SIDE);
             for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
                 for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
+                        int b = 0;
+
+#if VERSION == 1 || VERSION == 2
+                        int* chunk = chunks[(m + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + l + Terrain::NUM_CHUNKS_SIDE];
+                        // flat array indexing for gpu returned chunks
+                        int k_ = k * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH;
+                        int k_1 = k_ + Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH;
+                        int i_ = i * Terrain::CHUNK_WIDTH;
+                        int i_1 = i_ + Terrain::CHUNK_WIDTH;
+                        int j_ = j;
+                        int j_1 = j_ + 1;
+                        b += chunk[k_ + i_1 + j_1]; // v7
+                        b <<= 1;
+                        b += chunk[k_1 + i_1 + j_1]; // v6
+                        b <<= 1;
+                        b += chunk[k_1 + i_ + j_1]; // v5
+                        b <<= 1;
+                        b += chunk[k_ + i_ + j_1]; // v4
+                        b <<= 1;
+                        b += chunk[k_ + i_1 + j_]; // v3
+                        b <<= 1;
+                        b += chunk[k_1 + i_1 + j_]; // v2
+                        b <<= 1;
+                        b += chunk[k_1 + i_ + j_]; // v1
+                        b <<= 1;
+                        b += chunk[k_ + i_ + j_]; // v0
+
+#else
+                        // 3D array indexing for cpu returned chunks
+                        auto chunk = chunks[(m + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + l + Terrain::NUM_CHUNKS_SIDE];
+                        b += chunk[k][i + 1][j + 1];    // v7
+                        b <<= 1;
+                        b += chunk[k + 1][i + 1][j + 1];    // v6
+                        b <<= 1;
+                        b += chunk[k + 1][i][j + 1];    // v5
+                        b <<= 1;
+                        b += chunk[k][i][j + 1];    // v4
+                        b <<= 1;
+                        b += chunk[k][i + 1][j];    // v3
+                        b <<= 1;
+                        b += chunk[k + 1][i + 1][j];    // v2
+                        b <<= 1;
+                        b += chunk[k + 1][i][j];    // v1
+                        b <<= 1;
+                        b += chunk[k][i][j];    // v0
+#endif
+
+                        unsigned int numTriangles = case_to_numpolys[b];
+                        num += numTriangles * 18;
                         
+                    }
+                }
+            }
+        }
+    }
+
+    int w = Terrain::CHUNK_WIDTH-1;
+    int h = Terrain::CHUNK_HEIGHT-1;
+    size_t chunkSize = 90 * w * w * h;
+    size_t numChunks = 4 * Terrain::NUM_CHUNKS_SIDE * Terrain::NUM_CHUNKS_SIDE;
+    size_t size = chunkSize * numChunks;
+    GLfloat* vertices_3D = (GLfloat*)calloc(num, sizeof(GLfloat));
+
+    if (!vertices_3D) {
+        std::cerr << "calloc failed; valid sizes: " << std::endl;
+        for (int i = 0; i < 16; i++) {
+            numChunks = 4 * i * i;
+            size = chunkSize * numChunks;
+            std::cout << size*sizeof(GLfloat) << std::endl;
+        }
+        std::cout << SIZE_MAX << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    size_t index = 0;
+    clock_t begin = clock();
+    for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
+        for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
+            //size_t curChunk = chunkSize * 2 * Terrain::NUM_CHUNKS_SIDE * (l+Terrain::NUM_CHUNKS_SIDE) + chunkSize * (m+Terrain::NUM_CHUNKS_SIDE);
+            for (k = 0; k < Terrain::CHUNK_HEIGHT-1; k++) {
+                for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
+                    for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
+                        //size_t curVoxel = 90 * (k * w * w + i * w + j);
                         int b = 0;
 
 #if VERSION == 1 || VERSION == 2
@@ -167,7 +250,6 @@ int main(int argc, char** argv) {
                         b += chunk[k][i][j];    // v0
 #endif
 
-                        unsigned int e = edgeTable[b];
                         unsigned int numTriangles = case_to_numpolys[b];
                         unsigned int triangles[16];
                         for (int iterate = 0; iterate < 16; iterate++) {
@@ -212,20 +294,25 @@ int main(int argc, char** argv) {
 #endif
 
                         for (int iterate = 0; iterate < numTriangles; iterate++) {
-                            std::vector<glm::vec3> points(0);
+                            int curTriangle = 18 * iterate;
                             for (int ij = 0; ij < 3; ij++) {
                                 auto curEdge = triangles[iterate * 3 + ij];
                                 auto px = edges[curEdge][1] + Terrain::CHUNK_WIDTH * m;
                                 auto py = edges[curEdge][2];
                                 auto pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * l;
-                                points.push_back(glm::vec3(px, py, pz));
-                                new_vertices_3D.push_back(px);
-                                new_vertices_3D.push_back(py);
-                                new_vertices_3D.push_back(pz);
-                                new_vertices_3D.push_back(grad.x);
-                                new_vertices_3D.push_back(grad.y);
-                                new_vertices_3D.push_back(grad.z);
-
+                                //new_vertices_3D.push_back(px);
+                                //new_vertices_3D.push_back(py);
+                                //new_vertices_3D.push_back(pz);
+                                //new_vertices_3D.push_back(grad.x);
+                                //new_vertices_3D.push_back(grad.y);
+                                //new_vertices_3D.push_back(grad.z);
+                                //size_t index = curChunk + curVoxel + curTriangle + 6 * ij;
+                                vertices_3D[index++] = px;
+                                vertices_3D[index++] = py;
+                                vertices_3D[index++] = pz;
+                                vertices_3D[index++] = grad.x;
+                                vertices_3D[index++] = grad.y;
+                                vertices_3D[index++] = grad.z;
                             }
                         }
                     }
@@ -237,10 +324,11 @@ int main(int argc, char** argv) {
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     //time_spent *= 1000.0; // seconds to milliseconds
     std::cout << time_spent << std::endl;
-    if (new_vertices_3D.size() == 0) {
+    /*
+    if (vertices_3D.size() == 0) {
         std::cerr << "UH OH NO VERTICES" << std::endl;
         return -1;
-    }
+    }*/
     // VBO for Land Points
     GLuint VBOP;
     glGenBuffers(1, &VBOP);
@@ -248,15 +336,13 @@ int main(int argc, char** argv) {
     glGenVertexArrays(1, &VAOP);
     glBindVertexArray(VAOP);
     glBindBuffer(GL_ARRAY_BUFFER, VBOP);
-    glBufferData(GL_ARRAY_BUFFER, new_vertices_3D.size() * sizeof(GLfloat), &new_vertices_3D[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, num * sizeof(GLfloat), vertices_3D, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glBindVertexArray(0);
-    
 
     glm::mat4 Projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
     //glm::mat4 Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f);
@@ -284,7 +370,12 @@ int main(int argc, char** argv) {
 
     glClearColor(sky.x, sky.y, sky.z, 0.0f);
     glPointSize(10);
-    
+
+    glUseProgram(shaderProgram);
+
+    glUniform3f(ColorID, grass.x, grass.y, grass.z);
+    glUniform3f(LightID, thing.x, thing.y, thing.z);
+
     do {
         processInput(window);
         float currentFrame = glfwGetTime();
@@ -294,18 +385,11 @@ int main(int argc, char** argv) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // startup
-        glUseProgram(shaderProgram);
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &Model[0][0]);
-        glUniform3f(ColorID, grass.x, grass.y, grass.z);
-        glUniform3f(LightID, thing.x, thing.y, thing.z);
         
-        glBindVertexArray(VAOP);
-        glPointSize(10);
-        glDrawArrays(GL_TRIANGLES, 0, new_vertices_3D.size()/2);
-        glBindVertexArray(0);
-
-
+        glDrawArrays(GL_TRIANGLES, 0, num);
+        
         View = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         mvp = Projection * View * Model;
 
@@ -318,7 +402,7 @@ int main(int argc, char** argv) {
     
     glDeleteBuffers(1, &VAOP);
     glDeleteBuffers(1, &VBOP);
-    
+    free(vertices_3D);
     glfwDestroyWindow(window);
     glfwTerminate();
     return EXIT_SUCCESS;
