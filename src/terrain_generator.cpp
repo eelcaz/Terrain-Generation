@@ -20,7 +20,7 @@ double Terrain::fbmNoise(double z, double x, int octaves) {
     return total/maxVal;
 };
 
-Terrain::Terrain(unsigned int seed) : noise3D(PerlinNoise3D(seed)) {}
+Terrain::Terrain(unsigned int seed) : noise3D(PerlinNoise3D(seed)) {};
 
 int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
     // allocate new chunk heightmap
