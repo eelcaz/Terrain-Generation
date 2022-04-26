@@ -127,11 +127,11 @@ int* chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* gradients) 
     dim3 dimBlock(block_width, 1, 1);
     int grid_size = (Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)/block_width;
     dim3 dimGrid(grid_size, 1, 1);
-    std::cout << "block_width: " << block_width << "\n";
-    std::cout << "grid_size: " << grid_size << std::endl;
+    // std::cout << "block_width: " << block_width << "\n";
+    // std::cout << "grid_size: " << grid_size << std::endl;
     cudaMemcpyToSymbol("PERMUTATION", &PERMUTATION, sizeof(PERMUTATION));
     chunkDataKernel<<<dimGrid, dimBlock>>>(chunkZ, chunkX, d_heightMap, d_gradients, d_chunk);
-    printf("Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
+    // printf("Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
     cudaMemcpy(chunk, d_chunk, chunkSize, cudaMemcpyDeviceToHost);
     // for (int y = 0; y < Terrain::CHUNK_HEIGHT; ++y) {
     //     for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
