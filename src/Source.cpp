@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
                         for (int iterate = 0; iterate < 16; iterate++) {
                             triangles[iterate] = triTable[b][iterate];
                         }
-                        float edges[12][3] = {
+                        GLfloat edges[12][3] = {
                             {i + 0.0, j + 0.0, k + 0.5},    // e0
                             {i + 0.5, j + 0.0, k + 1.0},    // e1
                             {i + 1.0, j + 0.0, k + 0.5},    // e2
@@ -162,14 +162,19 @@ int main(int argc, char** argv) {
                                 auto px = edges[curEdge][1] + Terrain::CHUNK_WIDTH * m;
                                 auto py = edges[curEdge][2];
                                 auto pz = edges[curEdge][0] + Terrain::CHUNK_WIDTH * l;
-                                new_vertices_3D.push_back(px);
-                                new_vertices_3D.push_back(py);
-                                new_vertices_3D.push_back(pz);
-                                if (ij < 2) {
-                                    points.push_back(glm::vec3(px, py, pz));
-                                }
+                                points.push_back(glm::vec3(px, py, pz));
                             }
-                            normals.push_back(glm::cross(points[0], points[1]));
+                            auto normal = glm::normalize(glm::cross(points[0], points[1]));
+                            for (int ij = 0; ij < 3; ij++) {
+                                auto point = points[ij];
+                                new_vertices_3D.push_back(points[ij].x);
+                                new_vertices_3D.push_back(points[ij].y);
+                                new_vertices_3D.push_back(points[ij].z);
+                                new_vertices_3D.push_back(normal.x);
+                                new_vertices_3D.push_back(normal.y);
+                                new_vertices_3D.push_back(normal.z);
+
+                            }
                         }
                     }
                 }
@@ -238,7 +243,7 @@ int main(int argc, char** argv) {
     glBindVertexArray(VAOP);
     glBindBuffer(GL_ARRAY_BUFFER, VBOP);
     glBufferData(GL_ARRAY_BUFFER, new_vertices_3D.size() * sizeof(GLfloat), &new_vertices_3D[0], GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
     glEnableVertexAttribArray(0);
     glBindVertexArray(0);
     /*
@@ -308,6 +313,8 @@ int main(int argc, char** argv) {
 
     glUseProgram(shaderProgram);
     glUniform3f(glGetUniformLocation(shaderProgram, "u_color"), 1.0f, 0.5f, 0.5f);
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), cameraPos.x, cameraPos.y, cameraPos.z);
+    glUniform3f(glGetUniformLocation(shaderProgram, "lightDir"), cameraFront.x, cameraFront.y, cameraFront.z);
     glUseProgram(0);
 
     glm::mat4 Projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
@@ -317,10 +324,11 @@ int main(int argc, char** argv) {
 
     glm::mat4 View = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     glm::mat4 Model = glm::mat4(1.0f);
-    Model = glm::translate(Model, glm::vec3(0.0f, 0.0f, 0.0f));
     glm::mat4 mvp = Projection * View * Model;
 
     GLuint MatrixID = glGetUniformLocation(shaderProgram, "MVP");
+    GLuint ModelMatrixID = glGetUniformLocation(shaderProgram, "model");
+    GLuint ViewMatrixID = glGetUniformLocation(shaderProgram, "view");
 
 
 
@@ -347,8 +355,11 @@ int main(int argc, char** argv) {
 
         // startup
         glUseProgram(shaderProgram);
-        
+        glUniform3f(glGetUniformLocation(shaderProgram, "lightPos"), cameraPos.x, cameraPos.y, cameraPos.z);
+        glUniform3f(glGetUniformLocation(shaderProgram, "lightDir"), cameraFront.x, cameraFront.y, cameraFront.z);
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &Model[0][0]);
+        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &View[0][0]);
         // draw the triangle, index 0, 3 vertices
         //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         //glDrawArrays(GL_TRIANGLES, 0, 3); // could to GL_POINTS, GL_LINE_STRIP
