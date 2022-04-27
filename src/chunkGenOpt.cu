@@ -46,7 +46,7 @@ __forceinline__ __device__ double dotProduct3dOpt(int GridY, int GridZ, int Grid
 
 
 __global__ void chunkDataKernelOpt(int chunkZ, int chunkX, int* chunk) {
-    int finalVal = 0;
+    int finalVal;
 
     // map thread to coordinates in chunk
     int id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -80,28 +80,33 @@ __global__ void chunkDataKernelOpt(int chunkZ, int chunkX, int* chunk) {
     double wx = x - (double)xGrid0;
 
     double dot1, dot2;
-    double interp1, interp2, interp3, interp4, interp5, interp6;
-    dot1 = dotProduct3dOpt(yGrid0, zGrid0, xGrid0, y, z, x);
-    dot2 = dotProduct3dOpt(yGrid1, zGrid0, xGrid0, y, z, x);
-    interp1 = interpolate3dOpt(dot1, dot2, wy);
+    double interp1, interp2, interp3, interp4;
+    interp1 = interpolate3dOpt(
+        dotProduct3dOpt(yGrid0, zGrid0, xGrid0, y, z, x),
+        dotProduct3dOpt(yGrid1, zGrid0, xGrid0, y, z, x),
+        wy);
 
-    dot1 = dotProduct3dOpt(yGrid0, zGrid1, xGrid0, y, z, x);
-    dot2 = dotProduct3dOpt(yGrid1, zGrid1, xGrid0, y, z, x);
-    interp2 = interpolate3dOpt(dot1, dot2, wy);
+    interp2 = interpolate3dOpt(
+        dotProduct3dOpt(yGrid0, zGrid1, xGrid0, y, z, x),
+        dotProduct3dOpt(yGrid1, zGrid1, xGrid0, y, z, x),
+        wy);
 
-    dot1 = dotProduct3dOpt(yGrid0, zGrid0, xGrid1, y, z, x);
-    dot2 = dotProduct3dOpt(yGrid1, zGrid0, xGrid1, y, z, x);
-    interp3 = interpolate3dOpt(dot1, dot2, wy);
+    interp3 = interpolate3dOpt(interp1, interp2, wz);
 
-    dot1 = dotProduct3dOpt(yGrid0, zGrid1, xGrid1, y, z, x);
-    dot2 = dotProduct3dOpt(yGrid1, zGrid1, xGrid1, y, z, x);
-    interp4 = interpolate3dOpt(dot1, dot2, wy);
+    interp1 = interpolate3dOpt(
+        dotProduct3dOpt(yGrid0, zGrid0, xGrid1, y, z, x),
+        dotProduct3dOpt(yGrid1, zGrid0, xGrid1, y, z, x),
+        wy);
 
-    interp5 = interpolate3dOpt(interp1, interp2, wz);
-    interp6 = interpolate3dOpt(interp3, interp4, wz);
+    interp2 = interpolate3dOpt(
+        dotProduct3dOpt(yGrid0, zGrid1, xGrid1, y, z, x),
+        dotProduct3dOpt(yGrid1, zGrid1, xGrid1, y, z, x),
+        wy);
+
+    interp4 = interpolate3dOpt(interp1, interp2, wz);
 
     // dig out caves
-    if (interpolate3dOpt(interp5, interp6, wx) <= Terrain::CAVE_INTENSITY) {
+    if (interpolate3dOpt(interp3, interp4, wx) <= Terrain::CAVE_INTENSITY) {
         finalVal = 0;
     }
 
