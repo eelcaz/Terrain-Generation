@@ -32,15 +32,13 @@ __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, 
     double x = (chunkX + offset + (double)_x/(Terrain::CHUNK_WIDTH-1))/Terrain::TERRAIN_ZOOM;
     double noiseZ, noiseX;
 
-    // fbm iterations
-
-    int i = threadIdx.x / sectionSize;
+    int octave = threadIdx.x / sectionSize;
 
     double total = 0.0;
     double maxVal = 0;
 
-    double amplitude = pow(0.58, (double) i);
-    double frequency = pow(2.0, (double) i);
+    double amplitude = pow(0.58, (double) octave);
+    double frequency = pow(2.0, (double) octave);
 
     noiseZ = z * frequency;
     noiseX = x * frequency;
@@ -68,13 +66,7 @@ __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, 
 
     double localTotal = noiseVal * amplitude;
 
-    // add to final total
-    // if (id >= 64) {
-    //     printf("threadIdx: %d, blockIdx: %d id: %d\n", threadIdx.x, blockIdx.x, id);
-    // }
-
     atomicAdd(&s_totals[id % 64], (float)localTotal);
-    // printf("s_totals[%d]: %f\n", id%64, s_totals[id%64]);
 
     __syncthreads();
     // divide by maxVal
@@ -84,9 +76,7 @@ __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, 
         }
 
         total = s_totals[id % 64];
-        // printf("id: %d, total: %f, s_totals: %f\n", id, total, s_totals[id % 64]);
         total /= maxVal;
-        // printf("id: %d, total: %f, maxVal: %f\n", id, total, maxVal);
         total = (total + 1)/2;
 
         heightMap[id] = (int)floor((double)total * Terrain::TERRAIN_AMPLITUDE);
