@@ -38,7 +38,7 @@ __device__ double dotProductOpt(int GridZ, int GridX, double pz, double px, int*
 };
 
 __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, int* permutation) {
-    __shared__ double s_totals[64];
+    __shared__ double s_totals[384];
     int sectionSize = 64;
     int id = (threadIdx.x % sectionSize) + sectionSize*blockIdx.x;
     double offset = (double)1/(2*(Terrain::CHUNK_WIDTH-1));
@@ -77,25 +77,17 @@ __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, 
 
     double noiseVal = interpolateOpt(interp1, interp2, wx);
 
-    if (octave == 0) {
-        s_totals[id % 64] = 0;
-    }
-
-
-    // s_totals[threadIdx.x] = noiseVal * amplitude;
-    __syncthreads();
-    atomicAdd(&s_totals[id % 64], noiseVal * amplitude);
-    __syncthreads();
+    s_totals[threadIdx.x] = noiseVal * amplitude;
 
     if (octave == 0) {
         double total = 0.0;
         double maxVal = 0;
         for (int j = 0; j < 6; ++j) {
             maxVal += pow(0.58, (double) j);
+            total += s_totals[threadIdx.x + sectionSize*j];
         }
 
-        total = ((s_totals[id % 64]/maxVal) + 1)/2;
-        heightMap[id] = (int)floor((double)total * Terrain::TERRAIN_AMPLITUDE);
+        heightMap[id] = (int)floor((((total/maxVal) + 1)/2) * Terrain::TERRAIN_AMPLITUDE);
     }
 };
 
