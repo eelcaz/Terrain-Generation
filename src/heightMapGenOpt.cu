@@ -4,7 +4,7 @@
 
 #if !defined(__CUDA_ARCH__) || __CUDA_ARCH__ >= 600
 #else
-__device__ double atomicAdd(double* address, double val) {
+__forceinline__ __device__ double atomicAdd(double* address, double val) {
     unsigned long long int* address_as_ull = (unsigned long long int*)address;
     unsigned long long int old = *address_as_ull, assumed;
     do {
@@ -19,13 +19,13 @@ __device__ double atomicAdd(double* address, double val) {
 
 
 
-__device__ double interpolateOpt(double a, double b, double weight) {
+__forceinline__ __device__ double interpolateOpt(double a, double b, double weight) {
     if (weight < 0) return a;
     if (weight > 1) return b;
     return (b - a) * ((weight * (weight * 6.0 - 15.0) + 10.0) * weight * weight * weight) + a;
 };
 
-__device__ double dotProductOpt(int GridZ, int GridX, double pz, double px, int* permutation) {
+__forceinline__ __device__ double dotProductOpt(int GridZ, int GridX, double pz, double px, int* permutation) {
     // get the random vector on the gridPoint
     int randDir = permutation[(permutation[abs(GridZ) % 256] + abs(GridX)) % 256];
     double gradZ = cos((double)randDir);
