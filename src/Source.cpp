@@ -15,7 +15,6 @@
 #include <time.h>
 
 
-#define NUM_CHUNKS 8
 #define SEED 2022
 // VERSION: 0 = CPU, 1 = GPU, 2 = GPU Optimized
 #define VERSION 1
