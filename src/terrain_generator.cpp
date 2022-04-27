@@ -6,6 +6,7 @@
 #include "terrain_generator.h"
 #include "heightMapGen.h"
 #include "chunkGen.h"
+#include "chunkGenOpt.h"
 
 double Terrain::fbmNoise(double z, double x, int octaves) {
     double total = 0.0;
@@ -90,7 +91,9 @@ int* Terrain::generateChunkDataGpu(int chunkZ, int chunkX) {
 
 
 int* Terrain::generateChunkDataGpuOpt(int chunkZ, int chunkX) {
-    return new int[1];
+    // TODO: replace height map with optimized one
+    auto heights = chunkHeightMapKernel(chunkZ, chunkX, noise2D.permutation);
+    return chunkDataKernelOpt(chunkZ, chunkX, heights, noise3D.gradientsGPU);
 };
 
 int*** Terrain::createEmptyChunkCpu() {

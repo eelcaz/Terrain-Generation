@@ -4,9 +4,9 @@
 class Terrain {
 private:
     PerlinNoise noise2D;
-    PerlinNoise3D noise3D;
     double fbmNoise(double z, double x, int octaves);
 public:
+    PerlinNoise3D noise3D;
     // constants
     // chunk[y][z][x] z=x=CHUNK_WIDTH, y=CHUNK_HEIGHT
     static const int CHUNK_WIDTH = 16;
