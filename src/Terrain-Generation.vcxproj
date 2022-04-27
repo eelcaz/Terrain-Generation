@@ -167,6 +167,7 @@
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="chunkGen.h" />
+    <ClInclude Include="chunkGenOpt.h" />
     <ClInclude Include="shaders.h" />
     <ClInclude Include="heightMapGen.h" />
     <ClInclude Include="perlin_noise.h" />
@@ -176,6 +177,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="chunkGen.cu" />
+    <CudaCompile Include="chunkGenOpt.cu" />
     <CudaCompile Include="heightMapGen.cu" />
     <CudaCompile Include="marchingCubes.cu" />
   </ItemGroup>

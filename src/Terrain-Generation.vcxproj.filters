@@ -56,6 +56,9 @@
     <ClInclude Include="tables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="chunkGenOpt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="heightMapGen.cu">
@@ -65,6 +68,9 @@
       <Filter>Source Files</Filter>
     </CudaCompile>
     <CudaCompile Include="marchingCubes.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="chunkGenOpt.cu">
       <Filter>Source Files</Filter>
     </CudaCompile>
   </ItemGroup>
