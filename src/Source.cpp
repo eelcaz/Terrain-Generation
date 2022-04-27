@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 #if VERSION == 1
     std::cout << "In GPU implementation" << std::endl;
 #elif VERSION == 2
-    std::cout << "In Optimized GPU implementtation" << std::endl;
+    std::cout << "In Optimized GPU implementation" << std::endl;
 #else
     std::cout << "In CPU implementation" << std::endl;
 #endif
