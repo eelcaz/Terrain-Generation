@@ -24,8 +24,8 @@ __global__ void chunkHeightMapKernel(int chunkZ, int chunkX, int* heightMap, int
     double offset = (double)1/(2*(Terrain::CHUNK_WIDTH-1));
     int _z = threadIdx.x / Terrain::CHUNK_WIDTH;
     int _x = threadIdx.x % Terrain::CHUNK_WIDTH;
-    double z = (chunkZ + offset + (double)_z/(Terrain::CHUNK_WIDTH-1))/Terrain::TERRAIN_ZOOM;
-    double x = (chunkX + offset + (double)_x/(Terrain::CHUNK_WIDTH-1))/Terrain::TERRAIN_ZOOM;
+    double z = (chunkZ - offset + (double)_z/(Terrain::CHUNK_WIDTH-1))/Terrain::TERRAIN_ZOOM;
+    double x = (chunkX - offset + (double)_x/(Terrain::CHUNK_WIDTH-1))/Terrain::TERRAIN_ZOOM;
     double noiseZ, noiseX;
 
     // fbm iterations
