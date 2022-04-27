@@ -114,44 +114,44 @@ int* chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* permutation) {
 }
 
 
-int main(int argc, char *argv[]) {
-    Terrain terrain(2022);
+// int main(int argc, char *argv[]) {
+//     Terrain terrain(2022);
 
-    int* d_heightMap;
-    size_t heightMapSize = sizeof(int) * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH;
-    int* heightMap = new int[Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH];
+//     int* d_heightMap;
+//     size_t heightMapSize = sizeof(int) * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH;
+//     int* heightMap = new int[Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH];
 
-    int* d_permutation;
-    size_t permutationSize = sizeof(int)*256;
+//     int* d_permutation;
+//     size_t permutationSize = sizeof(int)*256;
 
-    int block_width = Terrain::CHUNK_WIDTH*(Terrain::CHUNK_WIDTH/4)*6;
-    dim3 dimBlock(block_width, 1, 1);
-    dim3 dimGrid(4, 1, 1);
+//     int block_width = Terrain::CHUNK_WIDTH*(Terrain::CHUNK_WIDTH/4)*6;
+//     dim3 dimBlock(block_width, 1, 1);
+//     dim3 dimGrid(4, 1, 1);
 
-    // setup gpu timers
-    cudaEvent_t start, stop;
-    float time;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    cudaEventRecord(start, 0);
+//     // setup gpu timers
+//     cudaEvent_t start, stop;
+//     float time;
+//     cudaEventCreate(&start);
+//     cudaEventCreate(&stop);
+//     cudaEventRecord(start, 0);
 
-    // using constant memory for gradients and heightMap & shared memory
-    for (int i = 0; i < 10000 ; ++i) {
-        cudaMalloc(&d_heightMap, heightMapSize);
-        cudaMalloc(&d_permutation, permutationSize);
-        cudaMemcpy(d_permutation, terrain.noise2D.permutation, permutationSize, cudaMemcpyHostToDevice);
-        chunkHeightMapKernelOpt<<<dimGrid, dimBlock>>>(0, 0, d_heightMap, d_permutation);
-        cudaFree(d_heightMap);
-    }
+//     // using constant memory for gradients and heightMap & shared memory
+//     for (int i = 0; i < 10000 ; ++i) {
+//         cudaMalloc(&d_heightMap, heightMapSize);
+//         cudaMalloc(&d_permutation, permutationSize);
+//         cudaMemcpy(d_permutation, terrain.noise2D.permutation, permutationSize, cudaMemcpyHostToDevice);
+//         chunkHeightMapKernelOpt<<<dimGrid, dimBlock>>>(0, 0, d_heightMap, d_permutation);
+//         cudaFree(d_heightMap);
+//     }
 
-    // stop gpu timers
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop); // after cudaEventRecord
-    cudaEventElapsedTime(&time, start, stop);
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
+//     // stop gpu timers
+//     cudaEventRecord(stop, 0);
+//     cudaEventSynchronize(stop); // after cudaEventRecord
+//     cudaEventElapsedTime(&time, start, stop);
+//     cudaEventDestroy(start);
+//     cudaEventDestroy(stop);
 
-    printf("chunkHeightMapKernelOpt time elapsed after 1000 kernel executions: %fms\n", time);
-    delete[] heightMap;
-    return 0;
-}
+//     printf("chunkHeightMapKernelOpt time elapsed after 1000 kernel executions: %fms\n", time);
+//     delete[] heightMap;
+//     return 0;
+// }
