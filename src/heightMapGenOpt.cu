@@ -34,9 +34,6 @@ __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, 
 
     int octave = threadIdx.x / sectionSize;
 
-    double total = 0.0;
-    double maxVal = 0;
-
     double amplitude = pow(0.58, (double) octave);
     double frequency = pow(2.0, (double) octave);
 
@@ -64,25 +61,22 @@ __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, 
 
     double noiseVal = interpolateOpt(interp1, interp2, wx);
 
-    double localTotal = noiseVal * amplitude;
-
-    atomicAdd(&s_totals[id % 64], (float)localTotal);
+    atomicAdd(&s_totals[threadIdx.x % 64], (float)noiseVal * amplitude);
 
     __syncthreads();
     // divide by maxVal
-    if (i == 0) {
+    if (octave == 0) {
+        double total = 0.0;
+        double maxVal = 0;
         for (int j = 0; j < 6; ++j) {
             maxVal += pow(0.58, (double) j);
         }
 
-        total = s_totals[id % 64];
-        total /= maxVal;
-        total = (total + 1)/2;
+        total = (s_totals[threadIdx.x % 64]/maxVal + 1)/2;
+        printf("id: %d, total: %f, s_totals: %f\n", id, total, s_totals[id % 64]);
 
         heightMap[id] = (int)floor((double)total * Terrain::TERRAIN_AMPLITUDE);
     }
-
-    return;
 };
 
 // void setConstantPermutation(int* permutation) {
