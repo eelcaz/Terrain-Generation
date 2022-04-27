@@ -13,12 +13,13 @@
 #include <camera.h>
 #include <tables.h>
 #include <time.h>
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+#include <marchingCubes.h>
 
-
-#define NUM_CHUNKS 8
 #define SEED 2022
 // VERSION: 0 = CPU, 1 = GPU, 2 = GPU Optimized
-#define VERSION 1
+#define VERSION 2
 
 /*
 double thing(int x, int y, int z, int l, int m, Terrain terrain) {
@@ -88,13 +89,16 @@ int main(int argc, char** argv) {
     int m;
     Terrain terrain(SEED);
     //std::vector<GLfloat> new_vertices_3D(0);
+    clock_t begin = clock();
 #if VERSION == 1 || VERSION == 2
     std::vector<int*> chunks(0);
+    std::cout << "Chunk Generation (GPU): ";
 #else
     std::vector<int***> chunks(0);
+    std::cout << "Chunk Generation (CPU): ";
 #endif
-    for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
-        for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
+    for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
+        for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
 
 #if VERSION == 1
             auto chunk = terrain.generateChunkDataGpu(l, m);
@@ -104,16 +108,36 @@ int main(int argc, char** argv) {
             auto chunk = terrain.generateChunkData(l, m);
 #endif
             chunks.push_back(chunk);
+            /*
+            int tracker = 0;
+            for (int a = 0; a < Terrain::CHUNK_HEIGHT; a++) {
+                for (int b = 0; b < Terrain::CHUNK_WIDTH; b++) {
+                    for (int c = 0; c < Terrain::CHUNK_WIDTH; c++) {
+                        printf("%d ", chunk[tracker++]);
+                    }
+                }
+                printf("\n");
+            }*/
+
         }
     }
-    
-    clock_t begin = clock();
-    size_t num = 0;
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    //time_spent *= 1000.0; // seconds to milliseconds
+    std::cout << time_spent << std::endl;
 
-    for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
-        for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
+    size_t* slices = (size_t*)calloc(chunks.size() * (Terrain::CHUNK_HEIGHT)+1, sizeof(size_t));
+    begin = clock();
+    size_t num = 0;
+    int curSlice = 0;
+//#if VERSION == 2
+  //  slicesKernel(slices, chunks, triTable, case_to_numpolys);
+//#else
+    for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
+        for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
             //size_t curChunk = chunkSize * 2 * Terrain::NUM_CHUNKS_SIDE * (l + Terrain::NUM_CHUNKS_SIDE) + chunkSize * (m + Terrain::NUM_CHUNKS_SIDE);
             for (k = 0; k < Terrain::CHUNK_HEIGHT - 1; k++) {
+                slices[curSlice++] = num;
                 for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
                         int b = 0;
@@ -168,15 +192,17 @@ int main(int argc, char** argv) {
                         
                     }
                 }
+                
             }
+            slices[curSlice++] = num;
         }
     }
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    slices[curSlice++] = num;
+    end = clock();
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     //time_spent *= 1000.0; // seconds to milliseconds
-    std::cout << time_spent << std::endl;
-
-
+    std::cout << "Marching Cubes Pt 1 (CPU): " << time_spent << std::endl;
+//#endif
     int w = Terrain::CHUNK_WIDTH-1;
     int h = Terrain::CHUNK_HEIGHT-1;
     size_t chunkSize = 90 * w * w * h;
@@ -197,8 +223,18 @@ int main(int argc, char** argv) {
 
     size_t index = 0;
     begin = clock();
-    for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
-        for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
+#if VERSION == 1 || VERSION == 2
+    // need to cudaMalloc for slices, vertices, and chunks
+    //unsigned int** new_triTable = (unsigned int**)calloc(256 * 16, sizeof(unsigned int));
+    //unsigned int* new_c2np = (unsigned int*)calloc(256, sizeof(unsigned int));
+    marchingCubesKernel(slices, vertices_3D, chunks, num, triTable, case_to_numpolys);
+    /*for (int i = 0; i < num * sizeof(GLfloat); i++) {
+        std::cout << stuff[i] << " " << std::endl;
+    }*/
+
+#else
+    for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
+        for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
             //size_t curChunk = chunkSize * 2 * Terrain::NUM_CHUNKS_SIDE * (l+Terrain::NUM_CHUNKS_SIDE) + chunkSize * (m+Terrain::NUM_CHUNKS_SIDE);
             for (k = 0; k < Terrain::CHUNK_HEIGHT-1; k++) {
                 for (i = 0; i < Terrain::CHUNK_WIDTH - 1; i++) {
@@ -233,7 +269,7 @@ int main(int argc, char** argv) {
 
 #else
                         // 3D array indexing for cpu returned chunks
-                        auto chunk = chunks[(m + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + l + Terrain::NUM_CHUNKS_SIDE];
+                        auto chunk = chunks[(l + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + m + Terrain::NUM_CHUNKS_SIDE];
                         b += chunk[k][i + 1][j + 1];    // v7
                         b <<= 1;
                         b += chunk[k + 1][i + 1][j + 1];    // v6
@@ -323,8 +359,9 @@ int main(int argc, char** argv) {
     }
     end = clock();
     time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    std::cout << time_spent << std::endl;
-    
+    std::cout << "Marching Cubes Pt 2 (CPU): " << time_spent << std::endl;
+#endif
+
     // VBO for Land Points
     GLuint VBOP;
     glGenBuffers(1, &VBOP);
@@ -384,7 +421,7 @@ int main(int argc, char** argv) {
         glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &Model[0][0]);
         
-        glDrawArrays(GL_TRIANGLES, 0, num);
+        glDrawArrays(GL_TRIANGLES, 0, (GLsizei) num);
         
         View = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         mvp = Projection * View * Model;
@@ -399,6 +436,7 @@ int main(int argc, char** argv) {
     glDeleteBuffers(1, &VAOP);
     glDeleteBuffers(1, &VBOP);
     free(vertices_3D);
+    free(slices);
     glfwDestroyWindow(window);
     glfwTerminate();
     return EXIT_SUCCESS;

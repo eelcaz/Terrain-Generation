@@ -139,6 +139,7 @@
     <CudaCompile>
       <TargetMachinePlatform>32</TargetMachinePlatform>
       <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
+      <CodeGeneration>compute_75,sm_75</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -167,6 +168,7 @@
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="chunkGen.h" />
+    <ClInclude Include="marchingCubes.h" />
     <ClInclude Include="shaders.h" />
     <ClInclude Include="heightMapGen.h" />
     <ClInclude Include="perlin_noise.h" />
