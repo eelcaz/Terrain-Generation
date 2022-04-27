@@ -38,7 +38,7 @@ __device__ double dotProductOpt(int GridZ, int GridX, double pz, double px, int*
 };
 
 __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, int* permutation) {
-    __shared__ float s_totals[64];
+    __shared__ double s_totals[64];
     int sectionSize = 64;
     int id = (threadIdx.x % sectionSize) + sectionSize*blockIdx.x;
     double offset = (double)1/(2*(Terrain::CHUNK_WIDTH-1));
@@ -77,10 +77,16 @@ __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, 
 
     double noiseVal = interpolateOpt(interp1, interp2, wx);
 
-    atomicAdd(&s_totals[threadIdx.x % 64], (float)noiseVal * amplitude);
+    if (octave == 0) {
+        s_totals[id % 64] = 0;
+    }
 
+
+    // s_totals[threadIdx.x] = noiseVal * amplitude;
     __syncthreads();
-    // divide by maxVal
+    atomicAdd(&s_totals[id % 64], noiseVal * amplitude);
+    __syncthreads();
+
     if (octave == 0) {
         double total = 0.0;
         double maxVal = 0;
@@ -88,17 +94,10 @@ __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, 
             maxVal += pow(0.58, (double) j);
         }
 
-        total = (s_totals[threadIdx.x % 64]/maxVal + 1)/2;
-        printf("id: %d, total: %f, s_totals: %f\n", id, total, s_totals[id % 64]);
-
+        total = ((s_totals[id % 64]/maxVal) + 1)/2;
         heightMap[id] = (int)floor((double)total * Terrain::TERRAIN_AMPLITUDE);
     }
 };
-
-// void setConstantPermutation(int* permutation) {
-//     size_t permutationSize = sizeof(int)*256;
-//     cudaMemcpyToSymbol(c_permutation, permutation, permutationSize);
-// };
 
 int* chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* permutation) {
     int* d_heightMap;
