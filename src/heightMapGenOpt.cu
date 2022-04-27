@@ -44,8 +44,8 @@ __global__ void chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* heightMap, 
     double offset = (double)1/(2*(Terrain::CHUNK_WIDTH-1));
     int _z = id / Terrain::CHUNK_WIDTH;
     int _x = id % Terrain::CHUNK_WIDTH;
-    double z = (chunkZ + offset + (double)_z/(Terrain::CHUNK_WIDTH-1))/Terrain::TERRAIN_ZOOM;
-    double x = (chunkX + offset + (double)_x/(Terrain::CHUNK_WIDTH-1))/Terrain::TERRAIN_ZOOM;
+    double z = (chunkZ - offset + (double)_z/(Terrain::CHUNK_WIDTH-1))/Terrain::TERRAIN_ZOOM;
+    double x = (chunkX - offset + (double)_x/(Terrain::CHUNK_WIDTH-1))/Terrain::TERRAIN_ZOOM;
     double noiseZ, noiseX;
 
     int octave = threadIdx.x / sectionSize;
