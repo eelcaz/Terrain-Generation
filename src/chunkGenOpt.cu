@@ -137,11 +137,11 @@ int* chunkDataKernelOptWrapper(int chunkZ, int chunkX, int* heightMap) {
     int grid_size = (Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)/block_width;
     dim3 dimGrid(grid_size, 1, 1);
     chunkDataKernelOpt<<<dimGrid, dimBlock>>>(chunkZ, chunkX, d_chunk);
-    printf("Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
+    printf("chunkGenOpt Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
 
     // get resulting chunk data for host
     cudaMemcpy(chunk, d_chunk, chunkSize, cudaMemcpyDeviceToHost);
-    printf("cpy call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
+    printf("chunkGenOpt cpy call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
     return chunk;
 };
 
