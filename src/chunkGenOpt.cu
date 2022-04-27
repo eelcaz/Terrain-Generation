@@ -25,13 +25,13 @@ __device__ __constant__ int PERMUTATION[] = {
 __device__ __constant__ int c_heightMap[256];
 __device__ __constant__ double c_gradients[768];
 
-__device__ double interpolate3dOpt(double a, double b, double weight) {
+__forceinline__ __device__ double interpolate3dOpt(double a, double b, double weight) {
     if (weight < 0) return a;
     if (weight > 1) return b;
     return (b - a) * ((weight * (weight * 6.0 - 15.0) + 10.0) * weight * weight * weight) + a;
 };
 
-__device__ double dotProduct3dOpt(int GridY, int GridZ, int GridX,
+__forceinline__ __device__ double dotProduct3dOpt(int GridY, int GridZ, int GridX,
                                   double py, double pz, double px) {
     int ind = PERMUTATION[(PERMUTATION[(PERMUTATION[abs(GridY) % 256] + abs(GridZ)) % 256] + abs(GridX)) % 256];
 
