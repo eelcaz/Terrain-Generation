@@ -1,9 +1,11 @@
 #include "perlin_noise_3d.h"
+#include "perlin_noise.h"
 
 class Terrain {
 private:
+    PerlinNoise noise2D;
     PerlinNoise3D noise3D;
-    static double fbmNoise(double z, double x, int octaves);
+    double fbmNoise(double z, double x, int octaves);
 public:
     // constants
     // chunk[y][z][x] z=x=CHUNK_WIDTH, y=CHUNK_HEIGHT
@@ -16,8 +18,8 @@ public:
     static const int CAVE_ZOOM = 1;
     static constexpr double CAVE_INTENSITY = -0.25;
     Terrain(unsigned int seed);
-    static int** generateChunkHeightMap(int chunkZ, int chunkX);
-    static int* generateChunkHeightMapGpu(int chunkZ, int chunkX);
+    int** generateChunkHeightMap(int chunkZ, int chunkX);
+    int* generateChunkHeightMapGpu(int chunkZ, int chunkX);
     int*** generateChunkData(int chunkZ, int chunkX);
     int* generateChunkDataGpu(int chunkZ, int chunkX);
     int* generateChunkDataGpuOpt(int chunkZ, int chunkX);
