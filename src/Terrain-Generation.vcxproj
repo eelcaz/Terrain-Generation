@@ -170,6 +170,7 @@
     <ClInclude Include="chunkGen.h" />
     <ClInclude Include="chunkGenOpt.h" />
     <ClInclude Include="marchingCubes.h" />
+    <ClInclude Include="heightMapGenOpt.h" />
     <ClInclude Include="shaders.h" />
     <ClInclude Include="heightMapGen.h" />
     <ClInclude Include="perlin_noise.h" />
@@ -181,6 +182,7 @@
     <CudaCompile Include="chunkGen.cu" />
     <CudaCompile Include="chunkGenOpt.cu" />
     <CudaCompile Include="heightMapGen.cu" />
+    <CudaCompile Include="heightMapGenOpt.cu" />
     <CudaCompile Include="marchingCubes.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
