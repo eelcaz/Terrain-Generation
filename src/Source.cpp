@@ -113,7 +113,9 @@ int main(int argc, char** argv) {
         }
     }
     
+    clock_t begin = clock();
     size_t num = 0;
+
     for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
         for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
             //size_t curChunk = chunkSize * 2 * Terrain::NUM_CHUNKS_SIDE * (l + Terrain::NUM_CHUNKS_SIDE) + chunkSize * (m + Terrain::NUM_CHUNKS_SIDE);
@@ -175,6 +177,11 @@ int main(int argc, char** argv) {
             }
         }
     }
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    //time_spent *= 1000.0; // seconds to milliseconds
+    std::cout << time_spent << std::endl;
+
 
     int w = Terrain::CHUNK_WIDTH-1;
     int h = Terrain::CHUNK_HEIGHT-1;
@@ -195,7 +202,7 @@ int main(int argc, char** argv) {
     }
 
     size_t index = 0;
-    clock_t begin = clock();
+    begin = clock();
     for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
         for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
             //size_t curChunk = chunkSize * 2 * Terrain::NUM_CHUNKS_SIDE * (l+Terrain::NUM_CHUNKS_SIDE) + chunkSize * (m+Terrain::NUM_CHUNKS_SIDE);
@@ -271,7 +278,7 @@ int main(int argc, char** argv) {
                         };
                         //std::cout << numVerts;
                         int d = 1;
-                        glm::vec3 grad(0.0f, 0.0f, 0.0f);
+                        glm::vec3 grad(0, 0, 0);
                         //auto abc = terrain.noise3D.randomGradient(k, i, j);
                         //grad = -normalize(glm::vec3(abc.x, abc.y, abc.z));
                         //grad.x = thing(j + 1, k, i, l, m, terrain) - thing(j - 1, k, i, l, m, terrain);
@@ -282,9 +289,9 @@ int main(int argc, char** argv) {
                         int k_d = k_ + d*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
                         int i_d = i_ + d*Terrain::CHUNK_WIDTH;
                         int j_d = j_ + d;
-                        grad.x = chunk[k_  + i_  + j_d] - chunk[k_ + i_ + j_];
-                        grad.y = chunk[k_d + i_  + j_ ] - chunk[k_ + i_ + j_];
-                        grad.z = chunk[k_  + i_d + j_ ] - chunk[k_ + i_ + j_];
+                        grad.x = (float) chunk[k_  + i_  + j_d] - chunk[k_ + i_ + j_];
+                        grad.y = (float) chunk[k_d + i_  + j_ ] - chunk[k_ + i_ + j_];
+                        grad.z = (float) chunk[k_  + i_d + j_ ] - chunk[k_ + i_ + j_];
                         grad = -normalize(grad);
 #else
                         grad.x = chunk[k][i][j + d] - chunk[k][i][j];
@@ -293,7 +300,7 @@ int main(int argc, char** argv) {
                         grad = -normalize(grad);
 #endif
 
-                        for (int iterate = 0; iterate < numTriangles; iterate++) {
+                        for (unsigned int iterate = 0; iterate < numTriangles; iterate++) {
                             int curTriangle = 18 * iterate;
                             for (int ij = 0; ij < 3; ij++) {
                                 auto curEdge = triangles[iterate * 3 + ij];
@@ -307,9 +314,9 @@ int main(int argc, char** argv) {
                                 //new_vertices_3D.push_back(grad.y);
                                 //new_vertices_3D.push_back(grad.z);
                                 //size_t index = curChunk + curVoxel + curTriangle + 6 * ij;
-                                vertices_3D[index++] = px;
-                                vertices_3D[index++] = py;
-                                vertices_3D[index++] = pz;
+                                vertices_3D[index++] = px*2;
+                                vertices_3D[index++] = py*2;
+                                vertices_3D[index++] = pz*2;
                                 vertices_3D[index++] = grad.x;
                                 vertices_3D[index++] = grad.y;
                                 vertices_3D[index++] = grad.z;
@@ -320,15 +327,10 @@ int main(int argc, char** argv) {
             }
         }
     }
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    //time_spent *= 1000.0; // seconds to milliseconds
+    end = clock();
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     std::cout << time_spent << std::endl;
-    /*
-    if (vertices_3D.size() == 0) {
-        std::cerr << "UH OH NO VERTICES" << std::endl;
-        return -1;
-    }*/
+    
     // VBO for Land Points
     GLuint VBOP;
     glGenBuffers(1, &VBOP);
@@ -344,7 +346,7 @@ int main(int argc, char** argv) {
     glEnableVertexAttribArray(1);
 
 
-    glm::mat4 Projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+    glm::mat4 Projection = glm::perspective(glm::radians(90.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 200.0f);
     //glm::mat4 Projection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.0f, 100.0f);
 
     //lookAt takes in camera position, target position, and up in the world space
@@ -365,7 +367,7 @@ int main(int argc, char** argv) {
     glm::vec3 sky = glm::vec3(140.0f, 189.0f, 214.0f) / 255.0f;
     glm::vec3 dirt = glm::vec3(155.0f, 118.0f, 83.0f) / 255.0f;
     glm::vec3 grass = glm::vec3(86.0f, 125.0f, 70.0f) / 255.0f;
-    auto thing = glm::normalize(glm::vec3(0.0, 1.0, 0.0));
+    auto thing = glm::normalize(glm::vec3(0.5, 1.0, 0.25));
     
 
     glClearColor(sky.x, sky.y, sky.z, 0.0f);
@@ -378,7 +380,7 @@ int main(int argc, char** argv) {
 
     do {
         processInput(window);
-        float currentFrame = glfwGetTime();
+        float currentFrame = (float) glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
