@@ -1,1 +1,2 @@
-int* chunkDataKernelOpt(int chunkZ, int chunkX, int* heightMap, double* gradients);
+void setConstantGradients(double* gradients);
+int* chunkDataKernelOptWrapper(int chunkZ, int chunkX, int* heightMap);

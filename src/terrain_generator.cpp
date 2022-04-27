@@ -20,9 +20,10 @@ double Terrain::fbmNoise(double z, double x, int octaves) {
     return total/maxVal;
 };
 
-Terrain::Terrain(unsigned int seed) :
-    noise2D(PerlinNoise(seed)),
-    noise3D(PerlinNoise3D(seed)) {};
+Terrain::Terrain(unsigned int seed)
+    : noise2D(PerlinNoise(seed)), noise3D(PerlinNoise3D(seed)) {
+    setConstantGradients(noise3D.gradientsGPU);
+};
 
 int** Terrain::generateChunkHeightMap(int chunkZ, int chunkX) {
     // allocate new chunk heightmap
@@ -93,7 +94,7 @@ int* Terrain::generateChunkDataGpu(int chunkZ, int chunkX) {
 int* Terrain::generateChunkDataGpuOpt(int chunkZ, int chunkX) {
     // TODO: replace height map with optimized one
     auto heights = chunkHeightMapKernel(chunkZ, chunkX, noise2D.permutation);
-    return chunkDataKernelOpt(chunkZ, chunkX, heights, noise3D.gradientsGPU);
+    return chunkDataKernelOptWrapper(chunkZ, chunkX, heights);
 };
 
 int*** Terrain::createEmptyChunkCpu() {

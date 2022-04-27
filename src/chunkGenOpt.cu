@@ -2,9 +2,7 @@
 #include <stdio.h>
 #include "terrain_generator.h"
 #include "device_launch_parameters.h"
-
-extern __shared__ int s_heightMap[256];
-extern __shared__ double s_gradients[768];
+#include "cuda_runtime.h"
 
 __device__ __constant__ int PERMUTATION[] = {
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,
@@ -41,13 +39,13 @@ __device__ double dotProduct3dOpt(int GridY, int GridZ, int GridX,
     double offsetZ = pz - (double)GridZ;
     double offsetX = px - (double)GridX;
 
-    return s_gradients[ind*3] * offsetY +
-           s_gradients[ind*3+1] * offsetZ +
-           s_gradients[ind*3+2] * offsetX;
+    return c_gradients[ind*3] * offsetY +
+           c_gradients[ind*3+1] * offsetZ +
+           c_gradients[ind*3+2] * offsetX;
 };
 
 
-__global__ void chunkDataKernelOpt(int chunkZ, int chunkX, int* heightMap, double* gradients, int* chunk) {
+__global__ void chunkDataKernelOpt(int chunkZ, int chunkX, int* chunk) {
     int finalVal = 0;
 
     // map thread to coordinates in chunk
@@ -56,21 +54,10 @@ __global__ void chunkDataKernelOpt(int chunkZ, int chunkX, int* heightMap, doubl
     int _z = (id % (Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)) / Terrain::CHUNK_WIDTH;
     int _x = (id % (Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)) % Terrain::CHUNK_WIDTH;
 
-    // load values into shared memory
-    if (threadIdx.x < 256) {
-        s_heightMap[threadIdx.x] = heightMap[threadIdx.x];
-        s_gradients[threadIdx.x*3] = gradients[threadIdx.x*3];
-        s_gradients[threadIdx.x*3+1] = gradients[threadIdx.x*3+1];
-        s_gradients[threadIdx.x*3+2] = gradients[threadIdx.x*3+2];
-    }
-
-    __syncthreads();
-
     // set solid part of chunk from height map
-    if (_y < s_heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
+    if (_y < c_heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
         finalVal = 1;
     }
-
 
     // noise coordinates
     double offset = (double)1/(2*(Terrain::CHUNK_WIDTH-1));
@@ -121,33 +108,30 @@ __global__ void chunkDataKernelOpt(int chunkZ, int chunkX, int* heightMap, doubl
     chunk[id] = finalVal;
 };
 
-int* chunkDataKernelOpt(int chunkZ, int chunkX, int* heightMap, double* gradients) {
+void setConstantGradients(double* gradients) {
+    size_t gradientsSize = sizeof(double)*256*3;
+    cudaMemcpyToSymbol(c_gradients, gradients, gradientsSize);
+}
+
+int* chunkDataKernelOptWrapper(int chunkZ, int chunkX, int* heightMap) {
     int* d_chunk;
-    int* d_heightMap;
-    double* d_gradients;
 
     // chunk memory allocation
-    size_t chunkSize = sizeof(int)*Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
-    int* chunk = new int[Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH];
+    int chunkNumEls = Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
+    size_t chunkSize = sizeof(int) * chunkNumEls;
+    int* chunk = new int[chunkNumEls];
     cudaMalloc(&d_chunk, chunkSize);
 
     // heightMap memory allocation and setup
     size_t heightMapSize = sizeof(int)*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
-    cudaMalloc(&d_heightMap, heightMapSize);
-    cudaMemcpy(d_heightMap, heightMap, heightMapSize, cudaMemcpyHostToDevice);
-
-    // gradients memory allocation and setup
-    size_t gradientsSize = sizeof(double)*256*3;
-    cudaMalloc(&d_gradients, gradientsSize);
-    cudaMemcpy(d_gradients, gradients, gradientsSize, cudaMemcpyHostToDevice);
-
+    cudaMemcpyToSymbol(c_heightMap, heightMap, heightMapSize);
 
     // set up parameters to call kernel
     int block_width = Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH*2;
     dim3 dimBlock(block_width, 1, 1);
     int grid_size = (Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)/block_width;
     dim3 dimGrid(grid_size, 1, 1);
-    chunkDataKernelOpt<<<dimGrid, dimBlock>>>(chunkZ, chunkX, d_heightMap, d_gradients, d_chunk);
+    chunkDataKernelOpt<<<dimGrid, dimBlock>>>(chunkZ, chunkX, d_chunk);
     printf("Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
 
     // get resulting chunk data for host
