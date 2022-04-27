@@ -149,21 +149,16 @@ int* chunkDataKernelOptWrapper(int chunkZ, int chunkX, int* heightMap) {
 // int main(int argc, char** argv) {
 //     Terrain terrain(2022);
 //     auto heightMap = terrain.generateChunkHeightMapGpu(0,0);
-
 //     int* d_chunk;
-//     int* d_heightMap;
-//     double* d_gradients;
-
 //     size_t chunkSize = sizeof(int)*Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
 //     size_t heightMapSize = sizeof(int)*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
 //     size_t gradientsSize = sizeof(double)*256*3;
-
+//     cudaMemcpyToSymbol(c_gradients, terrain.noise3D.gradientsGPU, gradientsSize);
 
 //     int block_width = Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH*2;
 //     dim3 dimBlock(block_width, 1, 1);
 //     int grid_size = (Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)/block_width;
 //     dim3 dimGrid(grid_size, 1, 1);
-//     cudaMalloc(&d_heightMap, heightMapSize);
 
 
 //     // setup gpu timers
@@ -173,26 +168,13 @@ int* chunkDataKernelOptWrapper(int chunkZ, int chunkX, int* heightMap) {
 //     cudaEventCreate(&stop);
 //     cudaEventRecord(start, 0);
 
-//     // using shared memory for gradients and heightMap
+//     // using constant memory for gradients and heightMap & shared memory
 //     for (int i = 0; i < 1000 ; ++i) {
 //         cudaMalloc(&d_chunk, chunkSize);
-//         cudaMalloc(&d_heightMap, heightMapSize);
-//         cudaMalloc(&d_gradients, gradientsSize);
-//         chunkDataKernelOpt<<<dimGrid, dimBlock>>>(i, i, d_heightMap, d_gradients, d_chunk);
+//         cudaMemcpyToSymbol(c_heightMap, heightMap, heightMapSize);
+//         chunkDataKernelOpt<<<dimGrid, dimBlock>>>(i, i, d_chunk);
 //         cudaFree(d_chunk);
-//         cudaFree(d_heightMap);
-//         cudaFree(d_gradients);
 //     }
-
-//     // using constant memory for gradients and heightMap
-//     // for (int i = 0; i < 1000 ; ++i) {
-//     //     cudaMalloc(&d_chunk, chunkSize);
-//     //     cudaMemcpyToSymbol(c_heightMap, heightMap, heightMapSize);
-//     //     cudaMemcpyToSymbol(c_gradients, terrain.noise3D.gradientsGPU, gradientsSize);
-
-//     //     chunkDataKernelOpt<<<dimGrid, dimBlock>>>(i, i, d_chunk);
-//     //     cudaFree(d_chunk);
-//     // }
 //     // stop gpu timers
 //     cudaEventRecord(stop, 0);
 //     cudaEventSynchronize(stop); // after cudaEventRecord
