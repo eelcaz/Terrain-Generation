@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
 #if VERSION == 1
             auto chunk = terrain.generateChunkDataGpu(l, m);
 #elif VERSION == 2
-            auto chunk = terrain.generateChunkDataGpu(l, m);
+            auto chunk = terrain.generateChunkDataGpuOpt(l, m);
 #else
             auto chunk = terrain.generateChunkData(l, m);
 #endif

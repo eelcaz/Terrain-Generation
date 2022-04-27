@@ -53,7 +53,6 @@ __global__ void chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* 
 
     // set solid part of chunk from height map
     if (_y < heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
-        // printf("y: %d, heightMap: %d\n", _y, heightMap[_z*Terrain::CHUNK_WIDTH + _x]);
         finalVal = 1;
     }
 
