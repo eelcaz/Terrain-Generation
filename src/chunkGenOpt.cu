@@ -46,7 +46,7 @@ __forceinline__ __device__ double dotProduct3dOpt(int GridY, int GridZ, int Grid
 
 
 __global__ void chunkDataKernelOpt(int chunkZ, int chunkX, int* chunk) {
-    int finalVal;
+    int finalVal = 0;
 
     // map thread to coordinates in chunk
     int id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -79,7 +79,7 @@ __global__ void chunkDataKernelOpt(int chunkZ, int chunkX, int* chunk) {
     double wz = z - (double)zGrid0;
     double wx = x - (double)xGrid0;
 
-    double dot1, dot2;
+    // dot products and interpolations
     double interp1, interp2, interp3, interp4;
     interp1 = interpolate3dOpt(
         dotProduct3dOpt(yGrid0, zGrid0, xGrid0, y, z, x),
