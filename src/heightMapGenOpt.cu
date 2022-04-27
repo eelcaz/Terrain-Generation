@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
     cudaEventRecord(start, 0);
 
     // using constant memory for gradients and heightMap & shared memory
-    for (int i = 0; i < 1000 ; ++i) {
+    for (int i = 0; i < 10000 ; ++i) {
         cudaMalloc(&d_heightMap, heightMapSize);
         cudaMalloc(&d_permutation, permutationSize);
         cudaMemcpy(d_permutation, terrain.noise2D.permutation, permutationSize, cudaMemcpyHostToDevice);
