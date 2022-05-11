@@ -64,9 +64,9 @@ float* Terrain::generateChunkData(int chunkZ, int chunkX) {
         for (int x = 0; x < CHUNK_WIDTH; ++x) {
             for (int y = 0; y < heightMap[z][x]; ++y) {
                 double offset = (double)1/(2*(CHUNK_WIDTH-1));
-                double fy = ((int)floor(y/CHUNK_WIDTH))+ offset + ((double)(y%CHUNK_WIDTH))/CHUNK_WIDTH;
-                double fz = (chunkZ - offset + (double)z/(CHUNK_WIDTH-1));
-                double fx = (chunkX - offset + (double)x/(CHUNK_WIDTH-1));
+                double fy = ((int)floor(y/CHUNK_WIDTH)) + offset + ((double)(y%CHUNK_WIDTH))/CHUNK_WIDTH;
+                double fz = (chunkZ + offset + (double)z/(CHUNK_WIDTH-1));
+                double fx = (chunkX + offset + (double)x/(CHUNK_WIDTH-1));
                 double val = noise3D.noise(fy*Terrain::CAVE_ZOOM,
                                            fz*Terrain::CAVE_ZOOM,
                                            fx*Terrain::CAVE_ZOOM);
