@@ -11,7 +11,7 @@ public:
     // chunk[y][z][x] z=x=CHUNK_WIDTH, y=CHUNK_HEIGHT
     static const int CHUNK_WIDTH = 16;
     static const int CHUNK_HEIGHT = 256;
-    static const int NUM_CHUNKS_SIDE = 32;
+    static const int NUM_CHUNKS_SIDE = 4;
     // good zoom values seem to be 256/CHUNK_WIDTH
     static const int TERRAIN_ZOOM = 17;
     static const int TERRAIN_AMPLITUDE = 200;

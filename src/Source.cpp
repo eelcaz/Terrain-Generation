@@ -19,7 +19,7 @@
 
 #define SEED 2022
 // VERSION: 0 = CPU, 1 = GPU, 2 = GPU Optimized
-#define VERSION 2
+#define VERSION 0
 
 /*
 double thing(int x, int y, int z, int l, int m, Terrain terrain) {
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
     std::vector<int*> chunks(0);
     std::cout << "Chunk Generation (GPU): ";
 #else
-    std::vector<int***> chunks(0);
+    std::vector<float*> chunks(0);
     std::cout << "Chunk Generation (CPU): ";
 #endif
     for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
@@ -142,8 +142,7 @@ int main(int argc, char** argv) {
                     for (j = 0; j < Terrain::CHUNK_WIDTH - 1; j++) {
                         int b = 0;
 
-#if VERSION == 1 || VERSION == 2
-                        int* chunk = chunks[(m + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + l + Terrain::NUM_CHUNKS_SIDE];
+                        float* chunk = chunks[(m + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + l + Terrain::NUM_CHUNKS_SIDE];
                         // flat array indexing for gpu returned chunks
                         int k_ = k * Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH;
                         int k_1 = k_ + Terrain::CHUNK_WIDTH * Terrain::CHUNK_WIDTH;
@@ -151,41 +150,22 @@ int main(int argc, char** argv) {
                         int i_1 = i_ + Terrain::CHUNK_WIDTH;
                         int j_ = j;
                         int j_1 = j_ + 1;
-                        b += chunk[k_ + i_1 + j_1]; // v7
+                        b += chunk[k_ + i_1 + j_1] >= Terrain::CAVE_INTENSITY; // v7
                         b <<= 1;
-                        b += chunk[k_1 + i_1 + j_1]; // v6
+                        b += chunk[k_1 + i_1 + j_1] >= Terrain::CAVE_INTENSITY; // v6
                         b <<= 1;
-                        b += chunk[k_1 + i_ + j_1]; // v5
+                        b += chunk[k_1 + i_ + j_1] >= Terrain::CAVE_INTENSITY; // v5
                         b <<= 1;
-                        b += chunk[k_ + i_ + j_1]; // v4
+                        b += chunk[k_ + i_ + j_1] >= Terrain::CAVE_INTENSITY; // v4
                         b <<= 1;
-                        b += chunk[k_ + i_1 + j_]; // v3
+                        b += chunk[k_ + i_1 + j_] >= Terrain::CAVE_INTENSITY; // v3
                         b <<= 1;
-                        b += chunk[k_1 + i_1 + j_]; // v2
+                        b += chunk[k_1 + i_1 + j_] >= Terrain::CAVE_INTENSITY; // v2
                         b <<= 1;
-                        b += chunk[k_1 + i_ + j_]; // v1
+                        b += chunk[k_1 + i_ + j_] >= Terrain::CAVE_INTENSITY; // v1
                         b <<= 1;
-                        b += chunk[k_ + i_ + j_]; // v0
+                        b += chunk[k_ + i_ + j_] >= Terrain::CAVE_INTENSITY; // v0
 
-#else
-                        // 3D array indexing for cpu returned chunks
-                        auto chunk = chunks[(m + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + l + Terrain::NUM_CHUNKS_SIDE];
-                        b += chunk[k][i + 1][j + 1];    // v7
-                        b <<= 1;
-                        b += chunk[k + 1][i + 1][j + 1];    // v6
-                        b <<= 1;
-                        b += chunk[k + 1][i][j + 1];    // v5
-                        b <<= 1;
-                        b += chunk[k][i][j + 1];    // v4
-                        b <<= 1;
-                        b += chunk[k][i + 1][j];    // v3
-                        b <<= 1;
-                        b += chunk[k + 1][i + 1][j];    // v2
-                        b <<= 1;
-                        b += chunk[k + 1][i][j];    // v1
-                        b <<= 1;
-                        b += chunk[k][i][j];    // v0
-#endif
 
                         unsigned int numTriangles = case_to_numpolys[b];
                         num += numTriangles * 18;
@@ -242,8 +222,7 @@ int main(int argc, char** argv) {
                         //size_t curVoxel = 90 * (k * w * w + i * w + j);
                         int b = 0;
 
-#if VERSION == 1 || VERSION == 2
-                        int* chunk = chunks[(m + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + l + Terrain::NUM_CHUNKS_SIDE];
+                        float* chunk = chunks[(m + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + l + Terrain::NUM_CHUNKS_SIDE];
                         // flat array indexing for gpu returned chunks
                         int k_ = k*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
                         int k_1 = k_ + Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
@@ -251,41 +230,21 @@ int main(int argc, char** argv) {
                         int i_1 = i_ + Terrain::CHUNK_WIDTH;
                         int j_ = j;
                         int j_1 = j_ + 1;
-                        b += chunk[k_  + i_1 + j_1]; // v7
+                        b += chunk[k_  + i_1 + j_1] >= Terrain::CAVE_INTENSITY; // v7
                         b <<= 1;
-                        b += chunk[k_1 + i_1 + j_1]; // v6
+                        b += chunk[k_1 + i_1 + j_1] >= Terrain::CAVE_INTENSITY; // v6
                         b <<= 1;
-                        b += chunk[k_1 + i_  + j_1]; // v5
+                        b += chunk[k_1 + i_  + j_1] >= Terrain::CAVE_INTENSITY; // v5
                         b <<= 1;
-                        b += chunk[k_  + i_  + j_1]; // v4
+                        b += chunk[k_  + i_  + j_1] >= Terrain::CAVE_INTENSITY; // v4
                         b <<= 1;
-                        b += chunk[k_  + i_1 + j_ ]; // v3
+                        b += chunk[k_  + i_1 + j_ ] >= Terrain::CAVE_INTENSITY; // v3
                         b <<= 1;
-                        b += chunk[k_1 + i_1 + j_ ]; // v2
+                        b += chunk[k_1 + i_1 + j_ ] >= Terrain::CAVE_INTENSITY; // v2
                         b <<= 1;
-                        b += chunk[k_1 + i_  + j_ ]; // v1
+                        b += chunk[k_1 + i_  + j_ ] >= Terrain::CAVE_INTENSITY; // v1
                         b <<= 1;
-                        b += chunk[k_ + i_ + j_]; // v0
-
-#else
-                        // 3D array indexing for cpu returned chunks
-                        auto chunk = chunks[(l + Terrain::NUM_CHUNKS_SIDE) * 2 * Terrain::NUM_CHUNKS_SIDE + m + Terrain::NUM_CHUNKS_SIDE];
-                        b += chunk[k][i + 1][j + 1];    // v7
-                        b <<= 1;
-                        b += chunk[k + 1][i + 1][j + 1];    // v6
-                        b <<= 1;
-                        b += chunk[k + 1][i][j + 1];    // v5
-                        b <<= 1;
-                        b += chunk[k][i][j + 1];    // v4
-                        b <<= 1;
-                        b += chunk[k][i + 1][j];    // v3
-                        b <<= 1;
-                        b += chunk[k + 1][i + 1][j];    // v2
-                        b <<= 1;
-                        b += chunk[k + 1][i][j];    // v1
-                        b <<= 1;
-                        b += chunk[k][i][j];    // v0
-#endif
+                        b += chunk[k_ + i_ + j_] >= Terrain::CAVE_INTENSITY; // v0
 
                         unsigned int numTriangles = case_to_numpolys[b];
                         unsigned int triangles[16];
@@ -308,14 +267,13 @@ int main(int argc, char** argv) {
                         };
                         //std::cout << numVerts;
                         int d = 1;
-                        glm::vec3 grad(0, 0, 0);
+                        glm::vec3 grad(0.0f, 0.0f, 0.0f);
                         //auto abc = terrain.noise3D.randomGradient(k, i, j);
                         //grad = -normalize(glm::vec3(abc.x, abc.y, abc.z));
                         //grad.x = thing(j + 1, k, i, l, m, terrain) - thing(j - 1, k, i, l, m, terrain);
                         //grad.y = thing(j, k + 1, i, l, m, terrain) - thing(j, k - 1, i, l, m, terrain);
                         //grad.z = thing(j, k, i + 1, l, m, terrain) - thing(j, k, i - 1, l, m, terrain);
                         //grad = -normalize(grad);
-#if VERSION == 1 || VERSION == 2
                         int k_d = k_ + d*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
                         int i_d = i_ + d*Terrain::CHUNK_WIDTH;
                         int j_d = j_ + d;
@@ -323,12 +281,6 @@ int main(int argc, char** argv) {
                         grad.y = (float) chunk[k_d + i_  + j_ ] - chunk[k_ + i_ + j_];
                         grad.z = (float) chunk[k_  + i_d + j_ ] - chunk[k_ + i_ + j_];
                         grad = -normalize(grad);
-#else
-                        grad.x = chunk[k][i][j + d] - chunk[k][i][j];
-                        grad.y = chunk[k + d][i][j] - chunk[k][i][j];
-                        grad.z = chunk[k][i + d][j] - chunk[k][i][j];
-                        grad = -normalize(grad);
-#endif
 
                         for (unsigned int iterate = 0; iterate < numTriangles; iterate++) {
                             int curTriangle = 18 * iterate;
