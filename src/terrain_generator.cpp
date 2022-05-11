@@ -98,19 +98,19 @@ int* Terrain::generateChunkDataGpuOpt(int chunkZ, int chunkX) {
     return chunkDataKernelOptWrapper(chunkZ, chunkX, heights);
 };
 
-int*** Terrain::createEmptyChunkCpu() {
+float*** Terrain::createEmptyChunkCpu() {
     // allocate data for whole chunk, zero initialized
-    int ***chunk = new int**[CHUNK_HEIGHT];
+    float ***chunk = new float**[CHUNK_HEIGHT];
     for (int y = 0; y < CHUNK_HEIGHT; ++y) {
-        chunk[y] = new int*[CHUNK_WIDTH];
+        chunk[y] = new float*[CHUNK_WIDTH];
         for (int z = 0; z < CHUNK_WIDTH; ++z) {
-            chunk[y][z] = new int[CHUNK_WIDTH]{0};
+            chunk[y][z] = new float[CHUNK_WIDTH]{0};
         }
     }
     return chunk;
 };
 
-void Terrain::deallocateChunk(int*** &chunk) {
+void Terrain::deallocateChunk(float*** &chunk) {
     for (int y = 0; y < CHUNK_HEIGHT; ++y) {
         for (int z = 0; z < CHUNK_WIDTH; ++z) {
             delete[] chunk[y][z];

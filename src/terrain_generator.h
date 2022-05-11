@@ -23,6 +23,6 @@ public:
     int*** generateChunkData(int chunkZ, int chunkX);
     int* generateChunkDataGpu(int chunkZ, int chunkX);
     int* generateChunkDataGpuOpt(int chunkZ, int chunkX);
-    int*** createEmptyChunkCpu();
-    static void deallocateChunk(int*** &chunk);
+    float*** createEmptyChunkCpu();
+    static void deallocateChunk(float*** &chunk);
 };
