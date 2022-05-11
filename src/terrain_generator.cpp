@@ -63,6 +63,16 @@ float* Terrain::generateChunkData(int chunkZ, int chunkX) {
     for (int z = 0; z < CHUNK_WIDTH; ++z) {
         for (int x = 0; x < CHUNK_WIDTH; ++x) {
             for (int y = 0; y < heightMap[z][x]; ++y) {
+                chunk[y*CHUNK_WIDTH*CHUNK_WIDTH +
+                      z*CHUNK_WIDTH +
+                      x] = 1.0f;
+            }
+        }
+    }
+
+    for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+        for (int z = 0; z < CHUNK_WIDTH; ++z) {
+            for (int x = 0; x < CHUNK_WIDTH; ++x) {
                 double offset = (double)1/(2*(CHUNK_WIDTH-1));
                 double fy = ((int)floor(y/CHUNK_WIDTH)) + offset + ((double)(y%CHUNK_WIDTH))/CHUNK_WIDTH;
                 double fz = (chunkZ + offset + (double)z/(CHUNK_WIDTH-1));
@@ -71,11 +81,13 @@ float* Terrain::generateChunkData(int chunkZ, int chunkX) {
                                            fz*Terrain::CAVE_ZOOM,
                                            fx*Terrain::CAVE_ZOOM);
                 int index = y*CHUNK_WIDTH*CHUNK_WIDTH + z*CHUNK_WIDTH + x;
-                chunk[index] = (float)val;
+                if (chunk[index] != 0) {
+                    // possibly an issue setting these values after height map with floats
+                    chunk[index] = (float)val;
+                }
             }
         }
     }
-
     return chunk;
 };
 
