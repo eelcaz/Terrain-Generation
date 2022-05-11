@@ -9,10 +9,10 @@ __constant__ unsigned int tris[256][16];
 __constant__ unsigned int c2np[256];
 
 #define CH 256
-#define NCS 32
+#define NCS 4
 #define CW 16
 
-__global__ void marchingCubesGPU(size_t* slices, GLfloat* vertices, int* chunks) {
+__global__ void marchingCubesGPU(size_t* slices, GLfloat* vertices, float* chunks) {
     int k = threadIdx.x;
     int l = blockIdx.y;
     int m = blockIdx.x;
@@ -46,21 +46,21 @@ __global__ void marchingCubesGPU(size_t* slices, GLfloat* vertices, int* chunks)
             int i_1 = i_ + CW;
             int j_ = j;
             int j_1 = j_ + 1;
-            b += chunks[chunk+ k_ + i_1 + j_1]; // v7
+            b += chunks[chunk+ k_ + i_1 + j_1] > Terrain::CAVE_INTENSITY; // v7
             b <<= 1;
-            b += chunks[chunk+k_1 + i_1 + j_1]; // v6
+            b += chunks[chunk+k_1 + i_1 + j_1] > Terrain::CAVE_INTENSITY; // v6
             b <<= 1;
-            b += chunks[chunk+k_1 + i_ + j_1]; // v5
+            b += chunks[chunk+k_1 + i_ + j_1] > Terrain::CAVE_INTENSITY; // v5
             b <<= 1;
-            b += chunks[chunk+k_ + i_ + j_1]; // v4
+            b += chunks[chunk+k_ + i_ + j_1] > Terrain::CAVE_INTENSITY; // v4
             b <<= 1;
-            b += chunks[chunk+k_ + i_1 + j_]; // v3
+            b += chunks[chunk+k_ + i_1 + j_] > Terrain::CAVE_INTENSITY; // v3
             b <<= 1;
-            b += chunks[chunk+k_1 + i_1 + j_]; // v2
+            b += chunks[chunk+k_1 + i_1 + j_] > Terrain::CAVE_INTENSITY; // v2
             b <<= 1;
-            b += chunks[chunk+k_1 + i_ + j_]; // v1
+            b += chunks[chunk+k_1 + i_ + j_] > Terrain::CAVE_INTENSITY; // v1
             b <<= 1;
-            b += chunks[chunk+k_ + i_ + j_]; // v0
+            b += chunks[chunk+k_ + i_ + j_] > Terrain::CAVE_INTENSITY; // v0
             //printf("%d\n", b);
             unsigned int numTriangles = c2np[b];
             GLfloat edges[12][3] = {
@@ -108,7 +108,7 @@ __global__ void marchingCubesGPU(size_t* slices, GLfloat* vertices, int* chunks)
     }
 }
 
-__global__ void getSlicesGPU(size_t* slices, int* chunks) {
+__global__ void getSlicesGPU(size_t* slices, float* chunks) {
     // represents the current chunk
     __shared__ float input1[CH + 1];
     int k = threadIdx.x;
@@ -132,21 +132,21 @@ __global__ void getSlicesGPU(size_t* slices, int* chunks) {
             int i_1 = i_ + CW;
             int j_ = j;
             int j_1 = j_ + 1;
-            b += chunks[chunk + k_ + i_1 + j_1]; // v7
+            b += chunks[chunk + k_ + i_1 + j_1] > Terrain::CAVE_INTENSITY; // v7
             b <<= 1;
-            b += chunks[chunk + k_1 + i_1 + j_1]; // v6
+            b += chunks[chunk + k_1 + i_1 + j_1] > Terrain::CAVE_INTENSITY; // v6
             b <<= 1;
-            b += chunks[chunk + k_1 + i_ + j_1]; // v5
+            b += chunks[chunk + k_1 + i_ + j_1] > Terrain::CAVE_INTENSITY; // v5
             b <<= 1;
-            b += chunks[chunk + k_ + i_ + j_1]; // v4
+            b += chunks[chunk + k_ + i_ + j_1] > Terrain::CAVE_INTENSITY; // v4
             b <<= 1;
-            b += chunks[chunk + k_ + i_1 + j_]; // v3
+            b += chunks[chunk + k_ + i_1 + j_] > Terrain::CAVE_INTENSITY; // v3
             b <<= 1;
-            b += chunks[chunk + k_1 + i_1 + j_]; // v2
+            b += chunks[chunk + k_1 + i_1 + j_] > Terrain::CAVE_INTENSITY; // v2
             b <<= 1;
-            b += chunks[chunk + k_1 + i_ + j_]; // v1
+            b += chunks[chunk + k_1 + i_ + j_] > Terrain::CAVE_INTENSITY; // v1
             b <<= 1;
-            b += chunks[chunk + k_ + i_ + j_]; // v0
+            b += chunks[chunk + k_ + i_ + j_] > Terrain::CAVE_INTENSITY; // v0
             //printf("%d\n", b);
             unsigned int numTriangles = c2np[b];
             num += numTriangles * 18;
@@ -172,8 +172,8 @@ __global__ void getSlicesGPU(size_t* slices, int* chunks) {
 
 }
 
-void slicesKernel(size_t* slices, std::vector<int*> chunks, unsigned int triTable[256][16], unsigned int case_to_numpolys[256]) {
-    int* chunks_host = (int*)calloc(chunks.size() * CW * CW * CH, sizeof(int));
+void slicesKernel(size_t* slices, std::vector<float*> chunks, unsigned int triTable[256][16], unsigned int case_to_numpolys[256]) {
+    float* chunks_host = (float*)calloc(chunks.size() * CW * CW * CH, sizeof(float));
     size_t index = 0;
 
     for (int i = 0; i < chunks.size(); i++) {
@@ -182,10 +182,10 @@ void slicesKernel(size_t* slices, std::vector<int*> chunks, unsigned int triTabl
         }
     }
 
-    int* chunks_device;
+    float* chunks_device;
     size_t* slices_device;
 
-    size_t chunks_size = chunks.size() * CW * CW * CH * sizeof(int);
+    size_t chunks_size = chunks.size() * CW * CW * CH * sizeof(float);
     size_t slices_size = (chunks.size() * (CH)+1) * sizeof(size_t);
 
     cudaMalloc((void**)&chunks_device, chunks_size);
@@ -228,8 +228,8 @@ void slicesKernel(size_t* slices, std::vector<int*> chunks, unsigned int triTabl
     cudaFree(chunks_device);
 }
 
-void marchingCubesKernel(size_t* slices, GLfloat* vertices_3D, std::vector<int*> chunks, size_t num, unsigned int triTable[256][16], unsigned int case_to_numpolys[256]) {
-    int* chunks_host = (int*)calloc(chunks.size() * CW * CW * CH, sizeof(int));
+void marchingCubesKernel(size_t* slices, GLfloat* vertices_3D, std::vector<float*> chunks, size_t num, unsigned int triTable[256][16], unsigned int case_to_numpolys[256]) {
+    float* chunks_host = (float*)calloc(chunks.size() * CW * CW * CH, sizeof(float));
     size_t index = 0;
 
     for (int i = 0; i < chunks.size(); i++) {
@@ -238,11 +238,11 @@ void marchingCubesKernel(size_t* slices, GLfloat* vertices_3D, std::vector<int*>
         }
     }
 
-    int* chunks_device;
+    float* chunks_device;
     GLfloat* vertices_device;
     size_t* slices_device;
 
-    size_t chunks_size = chunks.size() * CW * CW * CH * sizeof(int);
+    size_t chunks_size = chunks.size() * CW * CW * CH * sizeof(float);
     size_t vertices_size = num * sizeof(GLfloat);
     size_t slices_size = (chunks.size() * (CH) +1)* sizeof(size_t);
 

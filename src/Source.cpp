@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
     //std::vector<GLfloat> new_vertices_3D(0);
     clock_t begin = clock();
 #if VERSION == 1 || VERSION == 2
-    std::vector<int*> chunks(0);
+    std::vector<float*> chunks(0);
     std::cout << "Chunk Generation (GPU): ";
 #else
     std::vector<float*> chunks(0);
@@ -150,21 +150,21 @@ int main(int argc, char** argv) {
                         int i_1 = i_ + Terrain::CHUNK_WIDTH;
                         int j_ = j;
                         int j_1 = j_ + 1;
-                        b += chunk[k_ + i_1 + j_1] >= Terrain::CAVE_INTENSITY; // v7
+                        b += chunk[k_ + i_1 + j_1] > Terrain::CAVE_INTENSITY; // v7
                         b <<= 1;
-                        b += chunk[k_1 + i_1 + j_1] >= Terrain::CAVE_INTENSITY; // v6
+                        b += chunk[k_1 + i_1 + j_1] > Terrain::CAVE_INTENSITY; // v6
                         b <<= 1;
-                        b += chunk[k_1 + i_ + j_1] >= Terrain::CAVE_INTENSITY; // v5
+                        b += chunk[k_1 + i_ + j_1] > Terrain::CAVE_INTENSITY; // v5
                         b <<= 1;
-                        b += chunk[k_ + i_ + j_1] >= Terrain::CAVE_INTENSITY; // v4
+                        b += chunk[k_ + i_ + j_1] > Terrain::CAVE_INTENSITY; // v4
                         b <<= 1;
-                        b += chunk[k_ + i_1 + j_] >= Terrain::CAVE_INTENSITY; // v3
+                        b += chunk[k_ + i_1 + j_] > Terrain::CAVE_INTENSITY; // v3
                         b <<= 1;
-                        b += chunk[k_1 + i_1 + j_] >= Terrain::CAVE_INTENSITY; // v2
+                        b += chunk[k_1 + i_1 + j_] > Terrain::CAVE_INTENSITY; // v2
                         b <<= 1;
-                        b += chunk[k_1 + i_ + j_] >= Terrain::CAVE_INTENSITY; // v1
+                        b += chunk[k_1 + i_ + j_] > Terrain::CAVE_INTENSITY; // v1
                         b <<= 1;
-                        b += chunk[k_ + i_ + j_] >= Terrain::CAVE_INTENSITY; // v0
+                        b += chunk[k_ + i_ + j_] > Terrain::CAVE_INTENSITY; // v0
 
 
                         unsigned int numTriangles = case_to_numpolys[b];
@@ -230,21 +230,21 @@ int main(int argc, char** argv) {
                         int i_1 = i_ + Terrain::CHUNK_WIDTH;
                         int j_ = j;
                         int j_1 = j_ + 1;
-                        b += chunk[k_  + i_1 + j_1] >= Terrain::CAVE_INTENSITY; // v7
+                        b += chunk[k_  + i_1 + j_1] > Terrain::CAVE_INTENSITY; // v7
                         b <<= 1;
-                        b += chunk[k_1 + i_1 + j_1] >= Terrain::CAVE_INTENSITY; // v6
+                        b += chunk[k_1 + i_1 + j_1] > Terrain::CAVE_INTENSITY; // v6
                         b <<= 1;
-                        b += chunk[k_1 + i_  + j_1] >= Terrain::CAVE_INTENSITY; // v5
+                        b += chunk[k_1 + i_  + j_1] > Terrain::CAVE_INTENSITY; // v5
                         b <<= 1;
-                        b += chunk[k_  + i_  + j_1] >= Terrain::CAVE_INTENSITY; // v4
+                        b += chunk[k_  + i_  + j_1] > Terrain::CAVE_INTENSITY; // v4
                         b <<= 1;
-                        b += chunk[k_  + i_1 + j_ ] >= Terrain::CAVE_INTENSITY; // v3
+                        b += chunk[k_  + i_1 + j_ ] > Terrain::CAVE_INTENSITY; // v3
                         b <<= 1;
-                        b += chunk[k_1 + i_1 + j_ ] >= Terrain::CAVE_INTENSITY; // v2
+                        b += chunk[k_1 + i_1 + j_ ] > Terrain::CAVE_INTENSITY; // v2
                         b <<= 1;
-                        b += chunk[k_1 + i_  + j_ ] >= Terrain::CAVE_INTENSITY; // v1
+                        b += chunk[k_1 + i_  + j_ ] > Terrain::CAVE_INTENSITY; // v1
                         b <<= 1;
-                        b += chunk[k_ + i_ + j_] >= Terrain::CAVE_INTENSITY; // v0
+                        b += chunk[k_ + i_ + j_] > Terrain::CAVE_INTENSITY; // v0
 
                         unsigned int numTriangles = case_to_numpolys[b];
                         unsigned int triangles[16];

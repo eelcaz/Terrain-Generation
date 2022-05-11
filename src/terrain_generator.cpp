@@ -64,8 +64,8 @@ float* Terrain::generateChunkData(int chunkZ, int chunkX) {
         for (int x = 0; x < CHUNK_WIDTH; ++x) {
             for (int y = 0; y < heightMap[z][x]; ++y) {
                 chunk[y*CHUNK_WIDTH*CHUNK_WIDTH +
-                      z*CHUNK_WIDTH +
-                      x] = 1.0f;
+                      x*CHUNK_WIDTH +
+                      z] = 1.0f;
             }
         }
     }
@@ -80,7 +80,7 @@ float* Terrain::generateChunkData(int chunkZ, int chunkX) {
                 double val = noise3D.noise(fy*Terrain::CAVE_ZOOM,
                                            fz*Terrain::CAVE_ZOOM,
                                            fx*Terrain::CAVE_ZOOM);
-                int index = y*CHUNK_WIDTH*CHUNK_WIDTH + z*CHUNK_WIDTH + x;
+                int index = y*CHUNK_WIDTH*CHUNK_WIDTH + x*CHUNK_WIDTH + z;
                 if (chunk[index] != 0) {
                     // possibly an issue setting these values after height map with floats
                     chunk[index] = (float)val;
