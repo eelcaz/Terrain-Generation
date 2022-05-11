@@ -54,16 +54,18 @@ int* Terrain::generateChunkHeightMapGpu(int chunkZ, int chunkX) {
     return chunkHeightMapKernel(chunkZ, chunkX, noise2D.permutation);
 };
 
-int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
+float* Terrain::generateChunkData(int chunkZ, int chunkX) {
     // allocate data for whole chunk, zero initialized
-    int ***chunk = Terrain::createEmptyChunkCpu();
+    float *chunk = new float[CHUNK_HEIGHT*CHUNK_WIDTH*CHUNK_WIDTH]{0};
 
     auto heightMap = generateChunkHeightMap(chunkZ, chunkX);
     // solid parts of chunk will have value of 1, otherwise 0
     for (int z = 0; z < CHUNK_WIDTH; ++z) {
         for (int x = 0; x < CHUNK_WIDTH; ++x) {
             for (int y = 0; y < heightMap[z][x]; ++y) {
-                chunk[y][z][x] = 1;
+                chunk[y*CHUNK_WIDTH*CHUNK_WIDTH +
+                      z*CHUNK_WIDTH +
+                      x] = 1.0f;
             }
         }
     }
@@ -78,8 +80,10 @@ int*** Terrain::generateChunkData(int chunkZ, int chunkX) {
                 double val = noise3D.noise(fy*Terrain::CAVE_ZOOM,
                                            fz*Terrain::CAVE_ZOOM,
                                            fx*Terrain::CAVE_ZOOM);
-                if (chunk[y][z][x] == 1) {
-                    chunk[y][z][x] = val <= CAVE_INTENSITY ? 0 : 1;
+                int index = y*CHUNK_WIDTH*CHUNK_WIDTH + z*CHUNK_WIDTH + x;
+                if (chunk[index] != 0) {
+                    // possibly an issue setting these values after height map with floats
+                    chunk[index] = (float)val;
                 }
             }
         }
