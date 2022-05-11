@@ -45,19 +45,12 @@ __forceinline__ __device__ double dotProduct3dOpt(int GridY, int GridZ, int Grid
 };
 
 
-__global__ void chunkDataKernelOpt(int chunkZ, int chunkX, int* chunk) {
-    int finalVal = 0;
-
+__global__ void chunkDataKernelOpt(int chunkZ, int chunkX, float* chunk) {
     // map thread to coordinates in chunk
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     int _y = id / (Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH);
     int _z = (id % (Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)) / Terrain::CHUNK_WIDTH;
     int _x = (id % (Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)) % Terrain::CHUNK_WIDTH;
-
-    // set solid part of chunk from height map
-    if (_y < c_heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
-        finalVal = 1;
-    }
 
     // noise coordinates
     double offset = (double)1/(2*(Terrain::CHUNK_WIDTH-1));
@@ -105,9 +98,11 @@ __global__ void chunkDataKernelOpt(int chunkZ, int chunkX, int* chunk) {
 
     interp4 = interpolate3dOpt(interp1, interp2, wz);
 
+
+    float finalVal = 0;
     // dig out caves
-    if (interpolate3dOpt(interp3, interp4, wx) <= Terrain::CAVE_INTENSITY) {
-        finalVal = 0;
+    if (_y < c_heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
+        finalVal = interpolate3dOpt(interp3, interp4, wx);
     }
 
     chunk[id] = finalVal;
@@ -118,13 +113,13 @@ void setConstantGradients(double* gradients) {
     cudaMemcpyToSymbol(c_gradients, gradients, gradientsSize);
 }
 
-int* chunkDataKernelOptWrapper(int chunkZ, int chunkX, int* heightMap) {
-    int* d_chunk;
+float* chunkDataKernelOptWrapper(int chunkZ, int chunkX, int* heightMap) {
+    float* d_chunk;
 
     // chunk memory allocation
     int chunkNumEls = Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
-    size_t chunkSize = sizeof(int) * chunkNumEls;
-    int* chunk = new int[chunkNumEls];
+    size_t chunkSize = sizeof(float) * chunkNumEls;
+    float* chunk = new float[chunkNumEls];
     cudaMalloc(&d_chunk, chunkSize);
 
     // heightMap memory allocation and setup

@@ -85,7 +85,7 @@ float* Terrain::generateChunkDataGpu(int chunkZ, int chunkX) {
 };
 
 
-int* Terrain::generateChunkDataGpuOpt(int chunkZ, int chunkX) {
+float* Terrain::generateChunkDataGpuOpt(int chunkZ, int chunkX) {
     auto heights = chunkHeightMapKernelOpt(chunkZ, chunkX, noise2D.permutation);
     return chunkDataKernelOptWrapper(chunkZ, chunkX, heights);
 };
