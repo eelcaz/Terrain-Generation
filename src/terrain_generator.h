@@ -21,6 +21,6 @@ public:
     int** generateChunkHeightMap(int chunkZ, int chunkX);
     int* generateChunkHeightMapGpu(int chunkZ, int chunkX);
     float* generateChunkData(int chunkZ, int chunkX);
-    int* generateChunkDataGpu(int chunkZ, int chunkX);
+    float* generateChunkDataGpu(int chunkZ, int chunkX);
     int* generateChunkDataGpuOpt(int chunkZ, int chunkX);
 };

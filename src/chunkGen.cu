@@ -51,12 +51,6 @@ __global__ void chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* 
     int _z = (id % (Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)) / Terrain::CHUNK_WIDTH;
     int _x = (id % (Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)) % Terrain::CHUNK_WIDTH;
 
-    // set solid part of chunk from height map
-    if (_y < heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
-        finalVal = 1;
-    }
-
-
     // noise coordinates
     double offset = (double)1/(2*(Terrain::CHUNK_WIDTH-1));
     double y = (_y/Terrain::CHUNK_WIDTH)
@@ -99,20 +93,20 @@ __global__ void chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* 
     interp6 = interpolate3D(interp3, interp4, wz);
 
     // dig out caves
-    if (interpolate3D(interp5, interp6, wx) <= Terrain::CAVE_INTENSITY) {
-        finalVal = 0;
+    if (y <= heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
+      finalVal = interpolate3D(interp5, interp6, wx);
     }
 
     chunk[id] = finalVal;
 };
 
-int* chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* gradients) {
+float* chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* gradients) {
     // call kernel and return
-    int* d_chunk;
+    float* d_chunk;
     int* d_heightMap;
     double* d_gradients;
-    size_t chunkSize = sizeof(int)*Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
-    int* chunk = new int[Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH];
+    size_t chunkSize = sizeof(float)*Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
+    float* chunk = new float[Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH];
     cudaMalloc(&d_chunk, chunkSize);
     size_t heightMapSize = sizeof(int)*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH;
     cudaMalloc(&d_heightMap, heightMapSize);

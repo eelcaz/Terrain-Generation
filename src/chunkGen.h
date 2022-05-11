@@ -1,1 +1,1 @@
-int* chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* gradients);
+float* chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* gradients);
