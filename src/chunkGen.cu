@@ -41,10 +41,7 @@ __device__ double dotProduct3D(int GridY, int GridZ, int GridX,
 };
 
 
-__global__ void chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* gradients, int* chunk) {
-
-    int finalVal = 0;
-
+__global__ void chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* gradients, float* chunk) {
     // map thread to coordinates in chunk
     int id = blockIdx.x * blockDim.x + threadIdx.x;
     int _y = id / (Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH);
@@ -92,8 +89,9 @@ __global__ void chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* 
     interp5 = interpolate3D(interp1, interp2, wz);
     interp6 = interpolate3D(interp3, interp4, wz);
 
+    float finalVal = 0;
     // dig out caves
-    if (y <= heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
+    if (_y <= heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
       finalVal = interpolate3D(interp5, interp6, wx);
     }
 
