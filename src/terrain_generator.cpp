@@ -74,33 +74,48 @@ float* Terrain::generateChunkData(int chunkZ, int chunkX) {
                 int index = y*CHUNK_WIDTH*CHUNK_WIDTH + x*CHUNK_WIDTH + z;
 
                 chunk[index] = (float)val;
+                for (int i = 75; i < CHUNK_HEIGHT; i += 5) {
+                    if (y > i) {
+                        chunk[index] += .05;
+                    }
+                }
+                if (y > 95) {
+                    chunk[index] = 1;
+                }
+                for (int i = 75; i < 0; i -= 5) {
+                    if (y < i) {
+                        chunk[index] -= .1;
+                    }
+                }
+
             }
         }
     }
 
     // surface
-    for (int z = 0; z < CHUNK_WIDTH; ++z) {
-        for (int x = 0; x < CHUNK_WIDTH; ++x) {
-            for (int y = 0; y < CHUNK_HEIGHT; ++y) {
-                int index = y*CHUNK_WIDTH*CHUNK_WIDTH + x*CHUNK_WIDTH + z;
-                float distance_factor = abs((CAVE_INTENSITY - chunk[index]));
-                if (y >= heightMap[z][x] + 10) {
-                    chunk[index] = CAVE_INTENSITY - 0.1;
-                }
+    // for (int z = 0; z < CHUNK_WIDTH; ++z) {
+    //     for (int x = 0; x < CHUNK_WIDTH; ++x) {
+    //         for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+    //             int index = y*CHUNK_WIDTH*CHUNK_WIDTH + x*CHUNK_WIDTH + z;
+    //             float distance_factor = abs((CAVE_INTENSITY - chunk[index]));
+    //             if (y >= heightMap[z][x]) {
+    //                 chunk[index] = chunk[index] - 1;
+    //             }
 
-                if (y <= heightMap[z][x] + 10 && y > heightMap[z][x]) {
-                    int d = y - heightMap[z][x];
-                    chunk[index] = CAVE_INTENSITY - distance_factor*(d*0.1);
-                } else if (y == heightMap[z][x] && chunk[index] >= CAVE_INTENSITY) {
-                    chunk[index] = CAVE_INTENSITY;
-                } else if (y < heightMap[z][x] && y > heightMap[z][x] - 10
-                           && chunk[index] >= CAVE_INTENSITY) {
-                    int d = heightMap[z][x] - y;
-                    chunk[index] = CAVE_INTENSITY + distance_factor*(d*0.1);
-                }
-            }
-        }
-    }
+    //             // if (y <= heightMap[z][x] + 10 && y > heightMap[z][x]) {
+    //             //     int d = y - heightMap[z][x];
+    //             //     chunk[index] = CAVE_INTENSITY - distance_factor*(d*0.25);
+    //             // }
+    //             // else if (y == heightMap[z][x] && chunk[index] >= CAVE_INTENSITY) {
+    //             //     chunk[index] = CAVE_INTENSITY;
+    //             // } else if (y < heightMap[z][x] && y > heightMap[z][x] - 10
+    //             //            && chunk[index] >= CAVE_INTENSITY) {
+    //             //     int d = heightMap[z][x] - y;
+    //             //     chunk[index] = CAVE_INTENSITY + distance_factor*(d*0.01);
+    //             // }
+    //         }
+    //     }
+    // }
     return chunk;
 };
 
