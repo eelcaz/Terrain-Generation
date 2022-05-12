@@ -59,17 +59,8 @@ float* Terrain::generateChunkData(int chunkZ, int chunkX) {
     float *chunk = new float[CHUNK_HEIGHT*CHUNK_WIDTH*CHUNK_WIDTH]{0};
 
     auto heightMap = generateChunkHeightMap(chunkZ, chunkX);
-    // solid parts of chunk will have value of 1, otherwise 0
-    for (int z = 0; z < CHUNK_WIDTH; ++z) {
-        for (int x = 0; x < CHUNK_WIDTH; ++x) {
-            for (int y = 0; y < heightMap[z][x]; ++y) {
-                chunk[y*CHUNK_WIDTH*CHUNK_WIDTH +
-                      x*CHUNK_WIDTH +
-                      z] = 1.0f;
-            }
-        }
-    }
 
+    // gen caves
     for (int y = 0; y < CHUNK_HEIGHT; ++y) {
         for (int z = 0; z < CHUNK_WIDTH; ++z) {
             for (int x = 0; x < CHUNK_WIDTH; ++x) {
@@ -81,9 +72,25 @@ float* Terrain::generateChunkData(int chunkZ, int chunkX) {
                                            fz*Terrain::CAVE_ZOOM,
                                            fx*Terrain::CAVE_ZOOM);
                 int index = y*CHUNK_WIDTH*CHUNK_WIDTH + x*CHUNK_WIDTH + z;
-                if (chunk[index] != 0) {
-                    // possibly an issue setting these values after height map with floats
-                    chunk[index] = (float)val;
+
+                chunk[index] = (float)val;
+            }
+        }
+    }
+
+    // surface
+    for (int z = 0; z < CHUNK_WIDTH; ++z) {
+        for (int x = 0; x < CHUNK_WIDTH; ++x) {
+            for (int y = 0; y < CHUNK_HEIGHT; ++y) {
+                int index = y*CHUNK_WIDTH*CHUNK_WIDTH + x*CHUNK_WIDTH + z;
+                if (y > heightMap[z][x]) {
+                    chunk[index] = CAVE_INTENSITY - 0.1f;
+                }
+                if (y > heightMap[z][x] - 5
+                    && y < heightMap[z][x]
+                    && chunk[index] > CAVE_INTENSITY) {
+
+                    chunk[index] = chunk[index] + abs(CAVE_INTENSITY);
                 }
             }
         }
