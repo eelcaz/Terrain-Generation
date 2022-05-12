@@ -83,14 +83,20 @@ float* Terrain::generateChunkData(int chunkZ, int chunkX) {
         for (int x = 0; x < CHUNK_WIDTH; ++x) {
             for (int y = 0; y < CHUNK_HEIGHT; ++y) {
                 int index = y*CHUNK_WIDTH*CHUNK_WIDTH + x*CHUNK_WIDTH + z;
-                if (y > heightMap[z][x]) {
-                    chunk[index] = CAVE_INTENSITY - 0.1f;
+                float distance_factor = abs((CAVE_INTENSITY - chunk[index]));
+                if (y >= heightMap[z][x] + 10) {
+                    chunk[index] = CAVE_INTENSITY - 0.1;
                 }
-                if (y > heightMap[z][x] - 5
-                    && y < heightMap[z][x]
-                    && chunk[index] > CAVE_INTENSITY) {
 
-                    chunk[index] = chunk[index] + abs(CAVE_INTENSITY);
+                if (y <= heightMap[z][x] + 10 && y > heightMap[z][x]) {
+                    int d = y - heightMap[z][x];
+                    chunk[index] = CAVE_INTENSITY - distance_factor*(d*0.1);
+                } else if (y == heightMap[z][x] && chunk[index] >= CAVE_INTENSITY) {
+                    chunk[index] = CAVE_INTENSITY;
+                } else if (y < heightMap[z][x] && y > heightMap[z][x] - 10
+                           && chunk[index] >= CAVE_INTENSITY) {
+                    int d = heightMap[z][x] - y;
+                    chunk[index] = CAVE_INTENSITY + distance_factor*(d*0.1);
                 }
             }
         }
