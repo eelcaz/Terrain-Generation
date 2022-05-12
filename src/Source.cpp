@@ -348,9 +348,9 @@ int main(int argc, char** argv) {
     glfwSetCursorPosCallback(window, mouse_callback);
 
     glm::vec3 sky = glm::vec3(140.0f, 189.0f, 214.0f) / 255.0f;
-    glm::vec3 dirt = glm::vec3(155.0f, 118.0f, 83.0f) / 255.0f;
+    glm::vec3 grass = glm::vec3(155.0f, 118.0f, 83.0f) / 255.0f;
     // glm::vec3 grass = glm::vec3(86.0f, 125.0f, 70.0f) / 255.0f;
-    glm::vec3 grass = glm::vec3(86.0f, 125.0f, 70.0f) / 255.0f;
+    // glm::vec3 grass = glm::vec3(86.0f, 125.0f, 70.0f) / 255.0f;
     // auto thing = glm::normalize(glm::vec3(0.5, 1.0, 0.25));
     auto thing = glm::normalize(glm::vec3(0, -1.0, 0));
     
