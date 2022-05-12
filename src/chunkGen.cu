@@ -97,7 +97,7 @@ __global__ void chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* 
     float d = abs((float)_y - height);
 
     if (_y >= height + 10) {
-        finalVal = CAVE_INTENSITY - 0.1;
+        finalVal = Terrain::CAVE_INTENSITY - 0.1;
     }
 
     if (_y <= height + 10 && _y > height) {

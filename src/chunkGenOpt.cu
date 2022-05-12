@@ -98,11 +98,22 @@ __global__ void chunkDataKernelOpt(int chunkZ, int chunkX, float* chunk) {
 
     interp4 = interpolate3dOpt(interp1, interp2, wz);
 
-
-    float finalVal = 0;
     // dig out caves
-    if (_y < c_heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
-        finalVal = interpolate3dOpt(interp3, interp4, wx);
+    float finalVal = interpolate3dOpt(interp3, interp4, wx);
+    float height = c_heightMap[_z*Terrain::CHUNK_WIDTH + _x];
+    float dfact = abs((float)Terrain::CAVE_INTENSITY - finalVal);
+    float d = abs((float)_y - height);
+
+    if (_y < height + 10) {
+        finalVal = Terrain::CAVE_INTENSITY - 0.1;
+    }
+
+    if (_y <= height + 10 && _y > height) {
+        finalVal = Terrain::CAVE_INTENSITY - distance_factor*d*0.1;
+    } else if (_y == height && finalVal >= Terrain::CAVE_INTENSITY) {
+        finalVal = Terrain::CAVE_INTENSITY;
+    } else if (_y < height && _y > height - 10 && finalVal >= Terrain::CAVE_INTENSITY) {
+        finalVal = Terrain::CAVE_INTENSITY + distance_factor*d*0.1;
     }
 
     chunk[id] = finalVal;
