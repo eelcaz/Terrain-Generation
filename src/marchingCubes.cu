@@ -4,12 +4,14 @@
 #include <glm/glm.hpp>
 #include <terrain_generator.h>
 #include <iostream>
+#include <thrust/scan.h>
+#include <thrust/device_vector.h>
 
 __constant__ unsigned int tris[256][16];
 __constant__ unsigned int c2np[256];
 
 #define CH 256
-#define NCS 4
+#define NCS 32
 #define CW 16
 
 __global__ void marchingCubesGPU(size_t* slices, GLfloat* vertices, float* chunks) {
@@ -110,7 +112,6 @@ __global__ void marchingCubesGPU(size_t* slices, GLfloat* vertices, float* chunk
 
 __global__ void getSlicesGPU(size_t* slices, float* chunks) {
     // represents the current chunk
-    __shared__ float input1[CH + 1];
     int k = threadIdx.x;
     int l = blockIdx.y;
     int m = blockIdx.x;
@@ -153,22 +154,8 @@ __global__ void getSlicesGPU(size_t* slices, float* chunks) {
         }
     }
     if (k == 256) num = 0;
-    input1[k] = num;
-    
     __syncthreads();
-    //if (k == 128) printf("%d %d\n", input1[k], num);
-    __shared__ float partialSum[CH + 1];
-
-    partialSum[k] = input1[k];
-
-    for (unsigned int stride = 1; stride <= (CH+1) / 2; stride <<= 1) {
-        __syncthreads();
-        if (k > stride) {
-            partialSum[k] += partialSum[k - stride];
-        }
-    }
-    __syncthreads();
-    slices[chunkA * CH + k+1] = partialSum[k];
+    slices[chunkA * CH + k+1] = num;
 
 }
 
@@ -190,6 +177,9 @@ void slicesKernel(size_t* slices, std::vector<float*> chunks, unsigned int triTa
 
     cudaMalloc((void**)&chunks_device, chunks_size);
     cudaMalloc((void**)&slices_device, slices_size);
+
+    thrust::device_vector<size_t> d_data(chunks.size() * (CH)+1);
+    thrust::host_vector<size_t> h_data(chunks.size() * (CH)+1);
 
     cudaMemcpy(chunks_device, chunks_host, chunks_size, cudaMemcpyHostToDevice);
     cudaMemcpy(slices_device, slices, slices_size, cudaMemcpyHostToDevice);
@@ -218,11 +208,32 @@ void slicesKernel(size_t* slices, std::vector<float*> chunks, unsigned int triTa
     cudaEventElapsedTime(&time, start, stop);
 
     cudaMemcpy(slices, slices_device, slices_size, cudaMemcpyDeviceToHost);
-
-    printf("Time spent on GPU: %f milliseconds\n", time);
-    for (int i = 0; i < 512; i++) {
-        printf("%d, %d\n", i, slices[i]);
+    //for (int i = 0; i < 512; i++) {
+      //  printf("%d, %d\n", i, slices[i]);
+    //}
+    for (int i = 0; i < (chunks.size() * (CH)+1); i++) {
+        d_data[i] = slices[i];
     }
+    thrust::inclusive_scan(d_data.begin(), d_data.end(), d_data.begin());
+    thrust::copy(d_data.begin(), d_data.end(), h_data.begin());
+    
+    for (int i = 0; i < h_data.size(); i++) {
+        slices[i] = h_data[i];
+    }
+    /*for (int i = 0; i < 512; i++) {
+        printf("%d, %d\n", i, slices[i]);
+    }*/
+    printf("Time spent on GPU: %f milliseconds\n", time);
+    /*
+    size_t tracker = 0;
+    for (int i = 0; i < (chunks.size() * (CH)+1); i++) {
+        size_t temp = slices[i];
+        slices[i] += tracker;
+        tracker += temp;
+    }*/
+    /*for (int i = 0; i < 512; i++) {
+        printf("%d, %d\n", i, slices[i]);
+    }*/
     free(chunks_host);
     cudaFree(slices_device);
     cudaFree(chunks_device);
@@ -262,24 +273,25 @@ void marchingCubesKernel(size_t* slices, GLfloat* vertices_3D, std::vector<float
     blockDim = dim3(CH - 1);
     //printf("Grid : {%d, %d, %d} blocks. Blocks : {%d, %d, %d} threads.\n",
       //  gridDim.x, gridDim.y, gridDim.z, blockDim.x, blockDim.y, blockDim.z);
-
+    /*
     cudaEvent_t start2, stop2;
     float time2;
     cudaEventCreate(&start2);
     cudaEventCreate(&stop2);
-    cudaEventRecord(start2);
+    cudaEventRecord(start2);*/
     //printf("%d\n", NCS);
     marchingCubesGPU << <gridDim, blockDim >> > (slices_device, vertices_device, chunks_device);
     //printf("Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
 
     //cudaDeviceSynchronize();
+    /*
     cudaEventRecord(stop2);
     cudaEventSynchronize(stop2);
     cudaEventElapsedTime(&time2, start2, stop2);
-    
+    */
     cudaMemcpy(vertices_3D, vertices_device, vertices_size, cudaMemcpyDeviceToHost);
 
-    printf("Marching Cubes Pt 2 (GPU): %f milliseconds\n", time2);
+    //printf("Marching Cubes Pt 2 (GPU): %f milliseconds\n", time2);
     free(chunks_host);
     //for (int i = 0; i < 512; i++) {
       //  printf("%d, %d\n", i, slices[i]);

@@ -19,7 +19,7 @@
 
 #define SEED 2022
 // VERSION: 0 = CPU, 1 = GPU, 2 = GPU Optimized
-#define VERSION 0
+#define VERSION 2
 
 /*
 double thing(int x, int y, int z, int l, int m, Terrain terrain) {
@@ -101,11 +101,11 @@ int main(int argc, char** argv) {
         for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
 
 #if VERSION == 1
-            auto chunk = terrain.generateChunkDataGpu(l, m);
+            auto chunk = terrain.generateChunkData(m, l);
 #elif VERSION == 2
-            auto chunk = terrain.generateChunkDataGpuOpt(l, m);
+            auto chunk = terrain.generateChunkData(m, l);
 #else
-            auto chunk = terrain.generateChunkData(l, m);
+            auto chunk = terrain.generateChunkDataGpu(l, m);
 #endif
             chunks.push_back(chunk);
             /*
@@ -130,9 +130,10 @@ int main(int argc, char** argv) {
     begin = clock();
     size_t num = 0;
     int curSlice = 0;
-//#if VERSION == 2
-  //  slicesKernel(slices, chunks, triTable, case_to_numpolys);
-//#else
+#if VERSION == 2
+    slicesKernel(slices, chunks, triTable, case_to_numpolys);
+    num = slices[chunks.size() * (Terrain::CHUNK_HEIGHT)];
+#else
     for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
         for (l = -Terrain::NUM_CHUNKS_SIDE; l < Terrain::NUM_CHUNKS_SIDE; l++) {
             //size_t curChunk = chunkSize * 2 * Terrain::NUM_CHUNKS_SIDE * (l + Terrain::NUM_CHUNKS_SIDE) + chunkSize * (m + Terrain::NUM_CHUNKS_SIDE);
@@ -182,7 +183,7 @@ int main(int argc, char** argv) {
     time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     //time_spent *= 1000.0; // seconds to milliseconds
     std::cout << "Marching Cubes Pt 1 (CPU): " << time_spent << std::endl;
-//#endif
+#endif
     int w = Terrain::CHUNK_WIDTH-1;
     int h = Terrain::CHUNK_HEIGHT-1;
     size_t chunkSize = 90 * w * w * h;
