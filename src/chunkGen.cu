@@ -89,10 +89,23 @@ __global__ void chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* 
     interp5 = interpolate3D(interp1, interp2, wz);
     interp6 = interpolate3D(interp3, interp4, wz);
 
-    float finalVal = 0;
     // dig out caves
-    if (_y <= heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
-      finalVal = interpolate3D(interp5, interp6, wx);
+    // if (_y <= heightMap[_z*Terrain::CHUNK_WIDTH + _x]) {
+    float finalVal = interpolate3D(interp5, interp6, wx);
+    float height = heightMap[_z*Terrain::CHUNK_WIDTH + _x];
+    float dfact = abs((float)Terrain::CAVE_INTENSITY - finalVal);
+    float d = abs((float)_y - height);
+
+    if (_y >= height + 10) {
+        finalVal = CAVE_INTENSITY - 0.1;
+    }
+
+    if (_y <= height + 10 && _y > height) {
+        finalVal = Terrain::CAVE_INTENSITY - distance_factor*d*0.1;
+    } else if (_y == height && finalVal >= Terrain::CAVE_INTENSITY) {
+        finalVal = Terrain::CAVE_INTENSITY;
+    } else if (_y < height && _y > height - 10 && finalVal >= Terrain::CAVE_INTENSITY) {
+        finalVal = Terrain::CAVE_INTENSITY + distance_factor*d*0.1;
     }
 
     chunk[id] = finalVal;
