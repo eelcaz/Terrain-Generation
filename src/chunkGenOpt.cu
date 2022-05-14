@@ -104,16 +104,16 @@ __global__ void chunkDataKernelOpt(int chunkZ, int chunkX, float* chunk) {
     float dfact = abs((float)Terrain::CAVE_INTENSITY - finalVal);
     float d = abs((float)_y - height);
 
-    if (_y < height + 10) {
+    if (_y >= height + 10) {
         finalVal = Terrain::CAVE_INTENSITY - 0.1;
     }
 
     if (_y <= height + 10 && _y > height) {
-        finalVal = Terrain::CAVE_INTENSITY - distance_factor*d*0.1;
+        finalVal = Terrain::CAVE_INTENSITY - dfact*d*0.1;
     } else if (_y == height && finalVal >= Terrain::CAVE_INTENSITY) {
         finalVal = Terrain::CAVE_INTENSITY;
     } else if (_y < height && _y > height - 10 && finalVal >= Terrain::CAVE_INTENSITY) {
-        finalVal = Terrain::CAVE_INTENSITY + distance_factor*d*0.1;
+        finalVal = Terrain::CAVE_INTENSITY + dfact*d*0.1;
     }
 
     chunk[id] = finalVal;
@@ -143,11 +143,12 @@ float* chunkDataKernelOptWrapper(int chunkZ, int chunkX, int* heightMap) {
     int grid_size = (Terrain::CHUNK_HEIGHT*Terrain::CHUNK_WIDTH*Terrain::CHUNK_WIDTH)/block_width;
     dim3 dimGrid(grid_size, 1, 1);
     chunkDataKernelOpt<<<dimGrid, dimBlock>>>(chunkZ, chunkX, d_chunk);
-    printf("chunkGenOpt Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
+    //printf("chunkGenOpt Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
 
     // get resulting chunk data for host
     cudaMemcpy(chunk, d_chunk, chunkSize, cudaMemcpyDeviceToHost);
-    printf("chunkGenOpt cpy call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
+    cudaFree(d_chunk);
+    //printf("chunkGenOpt cpy call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
     return chunk;
 };
 

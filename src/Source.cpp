@@ -19,7 +19,7 @@
 
 #define SEED 2022
 // VERSION: 0 = CPU, 1 = GPU, 2 = GPU Optimized
-#define VERSION 2
+#define VERSION 0
 
 /*
 double thing(int x, int y, int z, int l, int m, Terrain terrain) {
@@ -101,11 +101,11 @@ int main(int argc, char** argv) {
         for (m = -Terrain::NUM_CHUNKS_SIDE; m < Terrain::NUM_CHUNKS_SIDE; m++) {
 
 #if VERSION == 1
-            auto chunk = terrain.generateChunkData(m, l);
-#elif VERSION == 2
-            auto chunk = terrain.generateChunkData(m, l);
-#else
             auto chunk = terrain.generateChunkDataGpu(l, m);
+#elif VERSION == 2
+            auto chunk = terrain.generateChunkDataGpuOpt(l, m);
+#else
+            auto chunk = terrain.generateChunkData(l, m);
 #endif
             chunks.push_back(chunk);
             /*
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     //time_spent *= 1000.0; // seconds to milliseconds
-    std::cout << time_spent << std::endl;
+    std::cout << time_spent << " seconds" << std::endl;
 
     size_t* slices = (size_t*)calloc(chunks.size() * (Terrain::CHUNK_HEIGHT)+1, sizeof(size_t));
     begin = clock();
@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
     end = clock();
     time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     //time_spent *= 1000.0; // seconds to milliseconds
-    std::cout << "Marching Cubes Pt 1 (CPU): " << time_spent << std::endl;
+    std::cout << "Marching Cubes Pt 1 (CPU): " << time_spent << " seconds" << std::endl;
 #endif
     int w = Terrain::CHUNK_WIDTH-1;
     int h = Terrain::CHUNK_HEIGHT-1;
@@ -312,7 +312,7 @@ int main(int argc, char** argv) {
     }
     end = clock();
     time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-    std::cout << "Marching Cubes Pt 2 (CPU): " << time_spent << std::endl;
+    std::cout << "Marching Cubes Pt 2 (CPU): " << time_spent << " seconds" << std::endl;
 #endif
 
     // VBO for Land Points

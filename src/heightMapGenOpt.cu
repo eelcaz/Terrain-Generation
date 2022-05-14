@@ -107,9 +107,11 @@ int* chunkHeightMapKernelOpt(int chunkZ, int chunkX, int* permutation) {
     dim3 dimBlock(block_width, 1, 1);
     dim3 dimGrid(4, 1, 1);
     chunkHeightMapKernelOpt<<<dimGrid, dimBlock>>>(chunkZ, chunkX, d_heightMap, d_permutation);
-    printf("heightMapGenOpt Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
+    //printf("heightMapGenOpt Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
     cudaMemcpy(heightMap, d_heightMap, heightMapSize, cudaMemcpyDeviceToHost);
-    printf("heightMapGenOpt cpy call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
+    //printf("heightMapGenOpt cpy call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
+    cudaFree(d_heightMap);
+    cudaFree(d_permutation);
     return heightMap;
 }
 

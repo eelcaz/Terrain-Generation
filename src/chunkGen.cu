@@ -101,11 +101,11 @@ __global__ void chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* 
     }
 
     if (_y <= height + 10 && _y > height) {
-        finalVal = Terrain::CAVE_INTENSITY - distance_factor*d*0.1;
+        finalVal = Terrain::CAVE_INTENSITY - dfact*d*0.1;
     } else if (_y == height && finalVal >= Terrain::CAVE_INTENSITY) {
         finalVal = Terrain::CAVE_INTENSITY;
     } else if (_y < height && _y > height - 10 && finalVal >= Terrain::CAVE_INTENSITY) {
-        finalVal = Terrain::CAVE_INTENSITY + distance_factor*d*0.1;
+        finalVal = Terrain::CAVE_INTENSITY + dfact*d*0.1;
     }
 
     chunk[id] = finalVal;
@@ -135,7 +135,7 @@ float* chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* gradients
     // std::cout << "grid_size: " << grid_size << std::endl;
     cudaMemcpyToSymbol("PERMUTATION", &PERMUTATION, sizeof(PERMUTATION));
     chunkDataKernel<<<dimGrid, dimBlock>>>(chunkZ, chunkX, d_heightMap, d_gradients, d_chunk);
-    // printf("Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
+    //printf("Device call:\t%s\n", cudaGetErrorString(cudaGetLastError()));
     cudaMemcpy(chunk, d_chunk, chunkSize, cudaMemcpyDeviceToHost);
     // for (int y = 0; y < Terrain::CHUNK_HEIGHT; ++y) {
     //     for (int z = 0; z < Terrain::CHUNK_WIDTH; ++z) {
@@ -146,6 +146,9 @@ float* chunkDataKernel(int chunkZ, int chunkX, int* heightMap, double* gradients
     //     }
     //     std::cout << "------------------" << std::endl;
     // }
+    cudaFree(d_chunk);
+    cudaFree(d_heightMap);
+    cudaFree(d_gradients);
     return chunk;
 };
 

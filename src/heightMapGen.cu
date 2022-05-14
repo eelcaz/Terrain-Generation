@@ -84,6 +84,8 @@ int* chunkHeightMapKernel(int chunkZ, int chunkX, int* permutation) {
     dim3 dimGrid(1, 1, 1);
     chunkHeightMapKernel<<<dimGrid, dimBlock>>>(chunkZ, chunkX, d_heightMap, d_permutation);
     cudaMemcpy(heightMap, d_heightMap, heightMapSize, cudaMemcpyDeviceToHost);
+    cudaFree(d_heightMap);
+    cudaFree(d_permutation);
     return heightMap;
 }
 
